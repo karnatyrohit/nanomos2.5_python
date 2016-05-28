@@ -4,18 +4,13 @@
 
 from readinput import *
 import numpy as np
-from lib.doping import doping
-from lib.fprime import fprime
+from doping import doping
+from fprime import fprime
 
 def main():
-    global Lsd, Lg_top, Lg_bot, t_top, t_bot, t_si
-    global N_sd, N_body
-    Lsd = round(Lsd/dx)*dx
-    Lg_top = round(Lg_top/dx)*dx
-    Lg_bot = round(Lg_bot/dx)*dx
-    t_top = round(t_top/dy)*dy
-    t_bot = round(t_bot/dy)*dy
-    t_si = round(t_si/dy)*dy
+
+    N_sd = Nsd1.value
+    N_body = Nbody1.value
 
     Lsda = round(Lsd/dx)
     Lg_topa = round(Lg_top/dx)
@@ -47,8 +42,10 @@ def main():
     #Calculate boundary Ec based neutral charge and Fermi-Dirac statistics###################
     #########################################################################################
     if ox_pnt_flag==0:
-      N_sd = ((t_si/dy)/(t_si/dy-1))*N_sd
-      N_body = ((t_si/dy)/(t_si/dy-1))*N_body
+        Nsd1.value = ((t_si/dy)/(t_si/dy-1))*N_sd
+        N_sd = Nsd1.value
+        Nbody1.value = ((t_si/dy)/(t_si/dy-1))*N_body
+        N_body = Nbody1
 
     Eg1 = -Vg1+phi_top-psi_si
     Eg2 = -Vg2+phi_bot-psi_si
@@ -105,7 +102,7 @@ def main():
     Te_sub = np.zeros((Nx, max_subband, t_vall))
 
     ############################START OF SPECIFYING Nd############################
-    doping(Nx, Ny, Ntotal, junction_l, junction_r, Nd)
+    Nd = doping(Nx, Ny, Ntotal, junction_l, junction_r, Nd, N_sd, N_body)
     ###########################END OF SPECIFING Nd###############################
 
     ###################Preparing F_prime(one time evaluation)####################

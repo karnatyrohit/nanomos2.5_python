@@ -7,7 +7,7 @@ import sys
 import numpy as np
 
 # DEVICE DIRECTIVE
-N_sd = 2e20; N_body=0; Lg_top = 9; Lg_bot = 9; Lsd = 10
+Nsd = 2e20; Nbody = 0; Lg_top = 9; Lg_bot = 9; Lsd = 10
 overlap_s = -4; overlap_d = -4
 dopslope_s=1; dopslope_d=1
 t_si = 3; t_top = 1.0; t_bot = 1.0; Te = 300  #tsi, tox_top,tox_bot, temp
@@ -62,8 +62,8 @@ Nc = 2.8e25
 Ncc = 2*m_e*m_t*k_B*Te/(np.pi*(h_bar**2))
 
 ###############modifications##########################################
-N_sd *= 1e6
-N_body *= 1e6
+Nsd *= 1e6
+Nbody *= 1e6
 Lg_top *= 1e-9
 Lg_bot *= 1e-9
 Lsd *= 1e-9
@@ -78,6 +78,20 @@ dx *= 1e-9
 dy *= 1e-9
 mu_low *= 1e-4
 Vel_sat *= 1e-2
+
+
+Lsd = round(Lsd/dx)*dx
+Lg_top = round(Lg_top/dx)*dx
+Lg_bot = round(Lg_bot/dx)*dx
+t_top = round(t_top/dy)*dy
+t_bot = round(t_bot/dy)*dy
+t_si = round(t_si/dy)*dy
+
+class Nsd1:
+    value = Nsd
+
+class Nbody1:
+    value = Nbody
 
 
 if transport_model == 'dd':
@@ -138,6 +152,7 @@ if max_subband > 3:
     print ver
     time.sleep(2)
 
+
 # if t_si<=2e-9
 #  t_vall=1
 #  max_subband=1
@@ -146,7 +161,7 @@ if max_subband > 3:
 #  time.sleep(2)
 #
 
-if criterion_outer <= 1e-4 & (transport_model == 2 or transport_model == 3):
+if criterion_outer <= 1e-4 and (transport_model == 2 or transport_model == 3):
     criterion_outer = 1e-4
     ver = '******Note! DVMAX for models CLBTE and QBTE is limited to 0.1meV!!!******'
     print ver

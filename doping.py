@@ -7,7 +7,7 @@ import numpy as np
 import math
 
 
-def doping(Nx, Ny, Ntotal, junction_l, junction_r, Nd):
+def doping(Nx, Ny, Ntotal, junction_l, junction_r, Nd, N_sd, N_body):
     Lsda = round(Lsd/dx)
     Lg_topa = round(Lg_top/dx)
     Lg_bota = round(Lg_bot/dx)
@@ -65,5 +65,6 @@ def doping(Nx, Ny, Ntotal, junction_l, junction_r, Nd):
             Nd[(Ntotal-Nx*(t_bota+2))+junction_l:(Ntotal-Nx*(t_bota+2)+1)+junction_r-1] = -N_body/2
             Nd[(Ntotal-Nx*(t_bota+2))+junction_r-1:(Ntotal-Nx*(t_bota+2)+Nx)] = (N_sd-N_body)/2
 
+    return Nd
     ########################## THE END OF FUNCTION DOPING ######################################################
 

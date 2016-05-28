@@ -102,11 +102,11 @@ def main():
     Te_sub = np.zeros((Nx, max_subband, t_vall))
 
     ############################START OF SPECIFYING Nd############################
-    Nd = doping(Nx, Ny, Ntotal, junction_l, junction_r, Nd, N_sd, N_body)
+    doping(Nx, Ny, Ntotal, junction_l, junction_r,Nd , N_sd, N_body)
     ###########################END OF SPECIFING Nd###############################
 
     ###################Preparing F_prime(one time evaluation)####################
-    F_prime = fprime(Nx, Ny, Ntotal, F_prime)
+    fprime(Nx, Ny, Ntotal, F_prime)
     ###########################END OF SPECIFIING F_prime#########################
 
     #############################################################################
@@ -117,24 +117,23 @@ def main():
     #############START OF SELF CONSISTENT CALCULATION OF POISSON AND ############
     #############################TRANSPORT EQUATIONS#############################
     #############################################################################
-    if transport_model==5
-    nu_scatter=Nx-2;
-    elseif transport_model==2
-    nu_scatter=Nx;
-    end
+    if transport_model == 5:
+        nu_scatter = Nx-2
+    elif transport_model == 2:
+        nu_scatter=Nx
 
-    Info_scatter_old=zeros(nu_scatter,4);
-    Info_scatter_new=zeros(nu_scatter,4);
+    Info_scatter_old = np.zeros(nu_scatter,4)
+    Info_scatter_new = np.zeros(nu_scatter,4)
 
-    %see reference, MEDICI manual, p2-15
-    mu_min=55*1e-4;
-    mu_max=300*1e-4;
-    Nref=1e22;
-    alpha=0.73;
+    #see reference, MEDICI manual, p2-15
+    mu_min = 55*1e-4
+    mu_max = 300*1e-4
+    Nref = 1e22
+    alpha = 0.73
 
-    %============Modified. Mar 18, 2002==================
-    Nd2D=reshape(Nd,Nx,Ny);
-    %============Modified. Mar 18, 2002==================
+    #============Modified. Mar 18, 2002==================
+    Nd2D = reshape(Nd,Nx,Ny)
+    #============Modified. Mar 18, 2002==================
 
     for i=1:nu_scatter
      Info_scatter_old(i,2)=i+1;

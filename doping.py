@@ -64,7 +64,5 @@ def doping(Nx, Ny, Ntotal, junction_l, junction_r, Nd, N_sd, N_body):
             Nd[(Ntotal-Nx*(t_bota+2)):(Ntotal-Nx*(t_bota+2)+junction_l)] = (N_sd-N_body)/2
             Nd[(Ntotal-Nx*(t_bota+2))+junction_l:(Ntotal-Nx*(t_bota+2)+1)+junction_r-1] = -N_body/2
             Nd[(Ntotal-Nx*(t_bota+2))+junction_r-1:(Ntotal-Nx*(t_bota+2)+Nx)] = (N_sd-N_body)/2
-
-    return Nd
     ########################## THE END OF FUNCTION DOPING ######################################################
 

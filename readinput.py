@@ -59,7 +59,7 @@ k_B = 1.38e-23
 h_bar = 1.05e-34
 m_e = 0.91e-30
 Nc = 2.8e25
-Ncc = 2*m_e*m_t*k_B*Te/(np.pi*h_bar ^ 2)
+Ncc = 2*m_e*m_t*k_B*Te/(np.pi*(h_bar**2))
 
 ###############modifications##########################################
 N_sd *= 1e6

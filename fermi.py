@@ -11,19 +11,19 @@ def fermi(x, fermi_flag, fermi_order):
         if fermi_flag == 1:
             exp_fac = np.exp(-0.17*(x+1.0)**2)
             nu = x**4+50.0+33.6*x*(1.0-0.68*exp_fac)
-            zeta=3.0*np.sqrt(np.pi)/(4.0*nu**0.375)
-            y=np.exp(x)/(1.0+zeta*np.exp(x))
+            zeta = 3.0*np.sqrt(np.pi)/(4.0*nu**0.375)
+            y = np.exp(x)/(1.0+zeta*np.exp(x))
         elif fermi_flag == 0:
-            y=np.exp(x)
+            y = np.exp(x)
 
     elif fermi_order == 0:
         if fermi_flag == 1:
-            y=np.log(1+np.exp(x))
+            y = np.log(1+np.exp(x))
         elif fermi_flag == 0:
-            y=np.exp(x)
+            y = np.exp(x)
 
     elif fermi_order == -1/2:
-        if fermi_flag==1:
+        if fermi_flag == 1:
             exp_fac = np.exp(-0.17*(x+1.0)**2)
             nu = x**4+50.0+33.6*x*(1.0-0.68*exp_fac)
             zeta = 3.0*np.sqrt(np.pi)/(4.0*nu**0.375)

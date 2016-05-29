@@ -87,8 +87,10 @@ t_top = round(t_top/dy)*dy
 t_bot = round(t_bot/dy)*dy
 t_si = round(t_si/dy)*dy
 
+
 class Nsd1:
     value = Nsd
+
 
 class Nbody1:
     value = Nbody

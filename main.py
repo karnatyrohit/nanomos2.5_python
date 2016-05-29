@@ -6,8 +6,13 @@ from readinput import *
 import numpy as np
 from doping import doping
 from fprime import fprime
+from charge import charge
+from scipy import sparse
 
 def main():
+    global transport_model
+    global fermi_flag
+    global Vd
 
     N_sd = Nsd1.value
     N_body = Nbody1.value
@@ -120,7 +125,7 @@ def main():
     if transport_model == 5:
         nu_scatter = Nx-2
     elif transport_model == 2:
-        nu_scatter=Nx
+        nu_scatter = Nx
 
     Info_scatter_old = np.zeros(nu_scatter,4)
     Info_scatter_new = np.zeros(nu_scatter,4)
@@ -132,58 +137,57 @@ def main():
     alpha = 0.73
 
     #============Modified. Mar 18, 2002==================
-    Nd2D = reshape(Nd,Nx,Ny)
+    Nd2D = np.reshape(Nd,(Ny,Nx)).transpose()
     #============Modified. Mar 18, 2002==================
 
-    for i=1:nu_scatter
-     Info_scatter_old(i,2)=i+1;
-     %Info_scatter_old(i,4)=1/(1/mu_low+...
-     %1/(mu_min+(mu_max-mu_min)./(1+(abs(Nd(Nx*round(t_top/dy)+1+Nx+i))/Nref).^alpha)));
-     %Info_scatter_old(i,4)=1/(1/mu_low+1/(mu_min+(mu_max-mu_min)./(1+(abs(Nd2D(i,round(Ny/2)))/Nref).^alpha)));
-     %============No Methiessen's rule========================================================
-     Info_scatter_old(i,4)=mu_min+(mu_low-mu_min)./(1+(abs(Nd2D(i,round(Ny/2)))/Nref).^alpha);
-     %========================================================================================
-    end
+    for i in range(0, nu_scatter):
+        Info_scatter_old[i,2] = i+1
+    #Info_scatter_old(i,4)=1/(1/mu_low+...
+    #1/(mu_min+(mu_max-mu_min)./(1+(abs(Nd(Nx*round(t_top/dy)+1+Nx+i))/Nref).^alpha)))
+    #Info_scatter_old(i,4)=1/(1/mu_low+1/(mu_min+(mu_max-mu_min)./(1+(abs(Nd2D(i,round(Ny/2)))/Nref).^alpha)))
+    #============No Methiessen's rule========================================================
+        Info_scatter_old[i,4] = mu_min+(mu_low-mu_min)/(1+(abs(Nd2D[i, round(Ny/2) - 1])/Nref)**alpha)  # Rohit - Check for error due to -1
+    #========================================================================================
 
-    %keyboard
-    %****************************compress matrix*********************************
-      spEc=sparse(Ec_old);
-      spNe=sparse(Ne_old);
-      spNd=sparse(Nd);
-      F_prime=sparse(F_prime);
+    #keyboard
+    #############################compress matrix#################################
+    spEc = sparse.csr_matrix(Ec_old)
+    spNe = sparse.csr_matrix(Ne_old)
+    spNd = sparse.csr_matrix(Nd)
+    F_prime = sparse.csr_matrix(F_prime)
 
-    %***********************START OF INITIAL GUESS ******************************
-      trans_temp=transport_model;
-      fermi_temp=fermi_flag;
-      transport_model=1;
-      fermi_flag=1;
-      Vd_temp=Vd;
-      Ed_temp=Ed;
-      Ed=Ed_temp+Vd-Vd_initial;
-      Vd=Vd_initial;
+    ########################START OF INITIAL GUESS ##############################
+    trans_temp = transport_model
+    fermi_temp = fermi_flag
+    transport_model = 1
+    fermi_flag = 1
+    Vd_temp = Vd
+    Ed_temp = Ed
+    Ed = Ed_temp+Vd-Vd_initial
+    Vd = Vd_initial
 
-      [Fn_new,Ne_new,Ne_sub,E_sub]=charge(spNe,spEc,Ne_sub_old,E_sub_old);
-      %Info_scatter_old=Info_scatter_new;
-      spFn=sparse(Fn_new);
-      spNe=sparse(Ne_new);
-      Ne_sub_old=Ne_sub;
-      E_sub_old=E_sub;
+    [Fn_new, Ne_new, Ne_sub, E_sub] = charge(spNe, spEc, Ne_sub_old, E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junction_l, junction_r, div_avd)
+    #Info_scatter_old=Info_scatter_new
+    spFn = sparse.csr_matrix(Fn_new)
+    spNe = sparse.csr_matrix(Ne_new)
+    Ne_sub_old = Ne_sub
+    E_sub_old = E_sub
 
-      [Ec_new]=poisson(spNd,spFn,spEc);
+    [Ec_new] = poisson(spNd,spFn,spEc)
 
-      spEc=sparse(Ec_new);
+    spEc=sparse(Ec_new)
 
-      transport_model=trans_temp
-      fermi_flag=fermi_temp
-      Ntotal
+    transport_model=trans_temp
+    fermi_flag=fermi_temp
+    Ntotal
 
 
        if ((transport_model~=3) & fermi_flag==1)
 
          transport_model=3;
 
-        [Fn_new,Ne_new,Ne_sub,E_sub]=charge(spNe,spEc,Ne_sub_old,E_sub_old);
-       %Info_scatter_old=Info_scatter_new;
+        [Fn_new, Ne_new, Ne_sub, E_sub]=charge(spNe, spEc, Ne_sub_old, E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junction_l, junction_r, div_avd)
+       #Info_scatter_old=Info_scatter_new
 
          spFn=sparse(Fn_new);
          spNe=sparse(Ne_new);
@@ -224,7 +228,7 @@ def main():
         SpNdin=spNd;
         SpFnin=spFn;
 
-    %***************************END OF INITIAL GUESS OF Ec******************************
+    ############################END OF INITIAL GUESS OF Ec##############################
 
 
 

@@ -128,7 +128,7 @@ def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junct
     elif transport_model == 3: #BALLISTIC TRANSPORT USING SEMICLASSICAL APPROACH#####
     ################################################################################
 
-        [U_sub, W_sub] = schred(Ec_old)
+        [U_sub, W_sub] = schred(Ec_old, Nx, Ny, Ntotal, mx, my, mz)
         E_sub = U_sub
 
         for i_val in range(0, t_vall):
@@ -155,7 +155,7 @@ def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junct
         if ox_pnt_flag == 0:
             Ne_new = np.array([Ne_old[0:(Nx*(t_topa+1))], [np.reshape((N_body_sum[1:Np_v-1,:]).transpose(),(1,Nx*(Np_v-2))).transpose()], [Ne_old[(Ntotal-Nx*(t_bota+1)):Ntotal]]])
         elif ox_pnt_flag == 1:
-            Ne_new= np.reshape(N_body_sum, (1, Ntotal)).transpose()
+            Ne_new = np.reshape(N_body_sum.transpose(), (1, Ntotal)).transpose()
 
     ################################################################################
     ######################START OF VARIABLE CHANGE PART#############################

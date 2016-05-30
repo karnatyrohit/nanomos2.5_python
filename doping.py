@@ -8,6 +8,9 @@ import math
 
 
 def doping(Nx, Ny, Ntotal, junction_l, junction_r, Nd, N_sd, N_body):
+    transport_model = transportmodel.value
+    fermi_flag = fermiflag1.value
+
     Lsda = round(Lsd/dx)
     Lg_topa = round(Lg_top/dx)
     Lg_bota = round(Lg_bot/dx)

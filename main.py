@@ -8,10 +8,11 @@ from doping import doping
 from fprime import fprime
 from charge import charge
 from scipy import sparse
+from poisson import poisson
 
 def main():
-    global transport_model
-    global fermi_flag
+    transport_model = transportmodel.value
+    fermi_flag = fermiflag1.value
     global Vd
 
     N_sd = Nsd1.value
@@ -159,8 +160,8 @@ def main():
     ########################START OF INITIAL GUESS ##############################
     trans_temp = transport_model
     fermi_temp = fermi_flag
-    transport_model = 1
-    fermi_flag = 1
+    transportmodel.value = 1
+    fermiflag1.value = 1
     Vd_temp = Vd
     Ed_temp = Ed
     Ed = Ed_temp+Vd-Vd_initial
@@ -173,16 +174,16 @@ def main():
     Ne_sub_old = Ne_sub
     E_sub_old = E_sub
 
-    [Ec_new] = poisson(spNd,spFn,spEc)
+    [Ec_new] = poisson(spNd,spFn,spEc, F_prime, div_avd, charge_fac, Eg1, Eg2, Es, Ed, Nx, Ny, Ntotal)
 
-    spEc=sparse(Ec_new)
+    spEc=sparse.csr_matrix(Ec_new)
 
-    transport_model=trans_temp
-    fermi_flag=fermi_temp
+    transportmodel.value = trans_temp
+    fermiflag1.value = fermi_temp
     Ntotal
 
 
-       if ((transport_model~=3) & fermi_flag==1)
+       if ((transport_model~=3) & fermi_flag==1):
 
          transport_model=3;
 
@@ -194,7 +195,7 @@ def main():
          Ne_sub_old=Ne_sub;
          E_sub_old=E_sub;
 
-         [Ec_new]=poisson(spNd,spFn,spEc);
+         [Ec_new]=poisson(spNd, spFn, spEc, F_prime, div_avd, charge_fac, Eg1, Eg2, Es, Ed, Nx, Ny, Ntotal);
 
          spEc=sparse(Ec_new);
 
@@ -212,7 +213,7 @@ def main():
           Ne_sub_old=Ne_sub;
           E_sub_old=E_sub;
 
-          [Ec_new]=poisson(spNd,spFn,spEc);
+          [Ec_new]=poisson(spNd, spFn, spEc, F_prime, div_avd, charge_fac, Eg1, Eg2, Es, Ed, Nx, Ny, Ntotal);
 
           spEc=sparse(Ec_new);
           iter_outer=iter_outer+1;

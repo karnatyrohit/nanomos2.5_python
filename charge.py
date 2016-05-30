@@ -9,7 +9,11 @@ from fermi import fermi
 from integral import integral
 from anti_dummy import anti_dummy
 
+
 def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junction_l, junction_r, div_avd):
+
+    transport_model = transportmodel.value
+    fermi_flag = fermiflag1.value
 
     Lsda=round(Lsd/dx)
     Lg_topa=round(Lg_top/dx)

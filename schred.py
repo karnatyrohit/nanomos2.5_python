@@ -10,6 +10,9 @@ from numpy import linalg as LA
 
 def schred(Ec_old, Nx, Ny, Ntotal, mx, my, mz):
 
+    transport_model = transportmodel.value
+    fermi_flag = fermiflag1.value
+
     Temp = Te
     N_sd = Nsd1.value
     N_body = Nbody1.value

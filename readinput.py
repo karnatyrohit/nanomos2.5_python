@@ -20,7 +20,7 @@ dx=0.3; dy=0.1; refine=1
 
 
 # TRANSPORT DIRECTIVE
-transport_model = 'clbte'; mu_low = 300; beta = 2; Vel_sat=1e7
+transport_model1 = 'clbte'; mu_low = 300; beta = 2; Vel_sat=1e7
 ELE_TAUW = 1e-13; ELE_CQ = 1
 
 # BIAS DIRECTIVE
@@ -44,7 +44,7 @@ t_vall = 3 # valleys= 1 if unprimed  3 if all
 max_subband = 1
 #True =1, False =0
 DG_flag = 1
-fermi_flag = 1
+fermiflag = 1
 ox_pnt_flag = 0
 
 # PLOTTING CAPABILITES - yes =1. no =0
@@ -96,19 +96,22 @@ class Nbody1:
     value = Nbody
 
 
-if transport_model == 'dd':
-    transport_model = 2
-elif transport_model == 'clbte':
-    transport_model = 3
-elif transport_model == 'qbte':
-    transport_model = 4
-elif transport_model == 'ddte':
-    transport_model = 5
-elif transport_model == 'et':
-    transport_model = 6
+if transport_model1 == 'dd':
+    transport_model1 = 2
+elif transport_model1 == 'clbte':
+    transport_model1 = 3
+elif transport_model1 == 'qbte':
+    transport_model1 = 4
+elif transport_model1 == 'ddte':
+    transport_model1 = 5
+elif transport_model1 == 'et':
+    transport_model1 = 6
 else:
     print '****** ERROR !!! MODEL CAN ONLY BE DD/CLBTE/QBTE/ET/QDTE *******'
 ######################################################################
+
+class transportmodel:
+    value = transport_model1
 
 #####################################################################
 # CHECKING ALL INPUT VARIABLES
@@ -116,7 +119,7 @@ else:
 if DG_flag != 1 and DG_flag != 0:
     sys.exit('******ERROR, DG_flag can only be 0 or 1!!!******')
 
-if fermi_flag != 1 and fermi_flag != 0:
+if fermiflag != 1 and fermiflag != 0:
     sys.exit('******ERROR, fermi_flag can only be 0 or 1!!!******')
 
 if ox_pnt_flag != 1 and ox_pnt_flag != 0:
@@ -163,7 +166,7 @@ if max_subband > 3:
 #  time.sleep(2)
 #
 
-if criterion_outer <= 1e-4 and (transport_model == 2 or transport_model == 3):
+if criterion_outer <= 1e-4 and (transport_model1 == 2 or transport_model1 == 3):
     criterion_outer = 1e-4
     ver = '******Note! DVMAX for models CLBTE and QBTE is limited to 0.1meV!!!******'
     print ver
@@ -176,5 +179,8 @@ else:
     dummy_flag = 1/2
 
 
-if transport_model == 6:
-    fermi_flag = 0
+if transport_model1 == 6:
+    fermiflag = 0
+
+class fermiflag1:
+    value = fermiflag

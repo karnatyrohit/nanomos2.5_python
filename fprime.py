@@ -8,6 +8,9 @@ from readinput import *
 
 def fprime(Nx, Ny, Ntotal, F_prime):
 
+    transport_model = transportmodel.value
+    fermi_flag = fermiflag1.value
+
     Lsda = round(Lsd/dx)
     Lg_topa = round(Lg_top/dx)
     Lg_bota = round(Lg_bot/dx)

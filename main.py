@@ -9,11 +9,12 @@ from fprime import fprime
 from charge import charge
 from scipy import sparse
 from poisson import poisson
+from current import current
 
 def main():
     transport_model = transportmodel.value
     fermi_flag = fermiflag1.value
-    global Vd
+    Vd = Vdc.value
 
     N_sd = Nsd1.value
     N_body = Nbody1.value
@@ -29,6 +30,25 @@ def main():
     delta_T_1 = 5/2 #energy flux parameter one
     delta_T_2 = 5/2 #energy flux parameter two
     dim_c=2 #degree of carrier freedom
+
+
+    ###########################################################################
+    # Gate and drain bias layout ##########
+    ###########################################################################
+    # Calculate total number of bias points
+    N_points = (Ng_step+1)*(Nd_step+1)
+    print '\nNumber of bias points = %d\n\n' % N_points
+
+    # Gate bias vector
+    # Given the number of gate bias steps, step size, and initial gate bias,
+    # create a vector containing all gate biases.
+    Vg_bias = np.zeros(Ng_step+1)
+
+    # Drain bias vector
+    # Given the number of drain bias steps, step size, and initial drain bias,
+    # create a vector containing all drain biases.
+    Vd_bias = np.zeros(Nd_step+1)
+
 
     ##########################################################################################
     ############################Step FUNCTION profile for Nsd#################################
@@ -78,6 +98,19 @@ def main():
     Nx = round((2*Lsd+Lg_top)/dx)+1
     Ny = round((t_top+t_bot+t_si)/dy)+1
     Ntotal = Nx*Ny
+
+    ###########################################################################
+    # Memory allocation
+    ###########################################################################
+    Ie = np.zeros((Ng_step+1, Nd_step+1))
+    Mu_sub_body = np.zeros((t_vall, Ng_step+1, Nd_step+1, Nx, max_subband))
+    Ie_sub_body = np.zeros((t_vall, Ng_step+1, Nd_step+1, Nx, max_subband))
+    Ne_sub_body = np.zeros((t_vall, Ng_step+1, Nd_step+1, Nx, max_subband))
+    Te_sub_body = np.zeros((t_vall, Ng_step+1, Nd_step+1, Nx, max_subband))
+    E_sub_body = np.zeros((t_vall, Ng_step+1, Nd_step+1, Nx, max_subband))
+    Ne_3d = np.zeros((Nd_step+1, Ntotal, Ng_step+1))
+    Ec_3d = np.zeros((Nd_step+1, Ntotal, Ng_step+1))
+    conv = {}
 
     ###############################################################################
     ######################END OF ASSIGNING VARIABLES###############################
@@ -166,6 +199,7 @@ def main():
     Ed_temp = Ed
     Ed = Ed_temp+Vd-Vd_initial
     Vd = Vd_initial
+    Vdc.value = Vd_initial
 
     [Fn_new, Ne_new, Ne_sub, E_sub] = charge(spNe, spEc, Ne_sub_old, E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junction_l, junction_r, div_avd)
     #Info_scatter_old=Info_scatter_new
@@ -176,64 +210,136 @@ def main():
 
     [Ec_new] = poisson(spNd,spFn,spEc, F_prime, div_avd, charge_fac, Eg1, Eg2, Es, Ed, Nx, Ny, Ntotal)
 
-    spEc=sparse.csr_matrix(Ec_new)
+    spEc = sparse.csr_matrix(Ec_new)
 
     transportmodel.value = trans_temp
+    print 'transport model = %d' % transportmodel.value
     fermiflag1.value = fermi_temp
-    Ntotal
+    print 'fermi_flag = %d' % fermiflag1.value
+    print 'Ntotal = %d' % Ntotal
 
 
-       if ((transport_model~=3) & fermi_flag==1):
-
-         transport_model=3;
-
+    if (transport_model!=3) and fermi_flag == 1:
+        transport_model = 3
+        transportmodel.value = 3
         [Fn_new, Ne_new, Ne_sub, E_sub]=charge(spNe, spEc, Ne_sub_old, E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junction_l, junction_r, div_avd)
-       #Info_scatter_old=Info_scatter_new
+        #Info_scatter_old=Info_scatter_new
 
-         spFn=sparse(Fn_new);
-         spNe=sparse(Ne_new);
-         Ne_sub_old=Ne_sub;
-         E_sub_old=E_sub;
+        spFn = sparse.csr_matrix(Fn_new)
+        spNe = sparse.csr_matrix(Ne_new)
+        Ne_sub_old = Ne_sub
+        E_sub_old = E_sub
 
-         [Ec_new]=poisson(spNd, spFn, spEc, F_prime, div_avd, charge_fac, Eg1, Eg2, Es, Ed, Nx, Ny, Ntotal);
+        [Ec_new] = poisson(spNd, spFn, spEc, F_prime, div_avd, charge_fac, Eg1, Eg2, Es, Ed, Nx, Ny, Ntotal)
 
-         spEc=sparse(Ec_new);
+        spEc = sparse.csr_matrix(Ec_new)
 
-         transport_model=trans_temp;
-         iter_outer=0;
-         error_outer=1;
-         while(error_outer>=criterion_outer)
+        transport_model = trans_temp
+        transportmodel.value = trans_temp
+        iter_outer = 0
+        error_outer = 1
+        while error_outer >= criterion_outer:
 
-          [Fn_new,Ne_new,Ne_sub,E_sub]=charge(spNe,spEc,Ne_sub_old,E_sub_old);
-         %Info_scatter_old=Info_scatter_new;
+            [Fn_new,Ne_new,Ne_sub,E_sub] = charge(spNe,spEc,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junction_l, junction_r, div_avd)
+         #Info_scatter_old=Info_scatter_new
+            spEc_old = spEc
+            spFn = sparse.csr_matrix(Fn_new)
+            spNe = sparse.csr_matrix(Ne_new)
+            Ne_sub_old = Ne_sub
+            E_sub_old = E_sub
 
-          spEc_old=spEc;
-          spFn=sparse(Fn_new);
-          spNe=sparse(Ne_new);
-          Ne_sub_old=Ne_sub;
-          E_sub_old=E_sub;
+            [Ec_new] = poisson(spNd, spFn, spEc, F_prime, div_avd, charge_fac, Eg1, Eg2, Es, Ed, Nx, Ny, Ntotal)
 
-          [Ec_new]=poisson(spNd, spFn, spEc, F_prime, div_avd, charge_fac, Eg1, Eg2, Es, Ed, Nx, Ny, Ntotal);
+            spEc = sparse.csr_matrix(Ec_new)
+            iter_outer = iter_outer+1
+            spEcdiff = spEc - spEc_old
+            Ecdiff = spEcdiff.todense()
+            error_outer=max(abs((np.real(Ecdiff))))
+            print '%s %e \n' % ('error_outer = ', error_outer)
 
-          spEc=sparse(Ec_new);
-          iter_outer=iter_outer+1;
-          error_outer=max(abs(full(real(spEc-spEc_old))));
-          fprintf ('%s %e \n','error_outer = ',error_outer);
-         end
-       end
-
-        SpNein=spNe;
-        SpEcin=spEc;
-        Ne_sub_oldin=Ne_sub_old;
-        E_sub_oldin=E_sub_old;
-        SpNdin=spNd;
-        SpFnin=spFn;
+    SpNein = spNe
+    SpEcin = spEc
+    Ne_sub_oldin = Ne_sub_old
+    E_sub_oldin = E_sub_old
+    SpNdin = spNd
+    SpFnin = spFn
 
     ############################END OF INITIAL GUESS OF Ec##############################
 
+    ##########################START OF CURRENT CALCULATION LOOP#########################
 
+    ###############################GATE BIAS LOOP#######################################
+    #transport_model=trans_temp;
+    Eg1_temp = Eg1
+    Eg2_temp = Eg2
+    for ii_vg in range (0,Ng_step+1):
+        Vg_bias[ii_vg] = Vg1+Vg_step*(ii_vg)
+        Eg1 = Eg1_temp - Vg_step*(ii_vg)
+        if DG_flag == 1:
+            Eg2 = Eg2_temp-Vg_step*(ii_vg)
 
+    # Obtain previous results/initial guess
+        spNe=SpNein
+        spEc=SpEcin
+        Ne_sub_old=Ne_sub_oldin
+        E_sub_old=E_sub_oldin
+        spNd=SpNdin
+        spFn=SpFnin
 
+    ###################################DRAIN BIAS LOOP##################################
+        for ii_vd in range(0, Nd_step+1):
+            Vd_bias[ii_vd] = Vd_temp+Vd_step*(ii_vd)
+            Ed = Ed_temp-Vd_step*(ii_vd)
+            Vd = Vd_bias[ii_vd]
+            Vdc.value = Vd_bias[ii_vd]
+    ############################START OF SELF CONSISTENT LOOP###########################
+            iter_outer = 0
+            error_outer = 1
+            converge = [error_outer]
 
+            while(error_outer>=criterion_outer):
 
-    return [Ie,Ie_sub_body,Te_sub_body,Ne_sub_body,E_sub_body,Ne_3d,Ec_3d,conv]
+                [Fn_new,Ne_new,Ne_sub,E_sub] = charge(spNe, spEc, Ne_sub_old, E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junction_l, junction_r, div_avd)
+                # Info_scatter_old=Info_scatter_new
+
+                spEc_old = spEc
+                spFn = sparse.csr_matrix(Fn_new)
+                spNe = sparse.csr_matrix(Ne_new)
+                Ne_sub_old = Ne_sub
+                E_sub_old = E_sub
+
+                [Ec_new] = poisson(spNd,spFn,spEc, F_prime, div_avd, charge_fac, Eg1, Eg2, Es, Ed, Nx, Ny, Ntotal)
+
+                spEc = sparse.csr_matrix(Ec_new)
+                iter_outer = iter_outer+1
+                spEcdiff2 = spEc - spEc_old
+                Ecdiff2 = spEcdiff2.todense()
+                error_outer = max(abs(np.real(Ecdiff2)))
+
+                converge = np.append(converge, [error_outer])
+
+                if iter_outer > 50:
+                    ver = '******Converge Problem!!! Please step down DVMAX******'
+                    print ver
+                    break
+
+            if transport_model == 5:
+                print 'current Is has to be established- coding left'
+                #Ie_tem = Is   # Rohit look into this global variable
+            else:
+                [Ie_tem, Ie_sub, Te_sub, Mu_sub] = current(spNe, spEc, Ne_sub, E_sub)
+    ##########################END OF SELF CONSISTENT LOOP##############################
+            Vggg = Vg_bias[ii_vg]
+            Vddd = Vd_bias[ii_vd]
+
+            Ie[ii_vg,ii_vd] = np.mean(np.real(Ie_tem))
+            Mu_sub_body[:ii_vg,ii_vd,:,:] = Mu_sub.todense()
+            Ie_sub_body[:, ii_vg, ii_vd, :, :] = Ie_sub.todense()
+            Ne_sub_body[:, ii_vg, ii_vd, :, :] = Ne_sub.todense()
+            Te_sub_body[:, ii_vg, ii_vd, :, :] = Te_sub.todense()
+            E_sub_body[:, ii_vg, ii_vd, :, :] = E_sub.todense()
+            Ne_3d[ii_vd, :, ii_vg] = Ne_new.todense()
+            Ec_3d[ii_vd, :, ii_vg] = Ec_new.todense()
+            conv[ii_vg, ii_vd] = converge
+
+    return [Ie, Ie_sub_body, Te_sub_body, Ne_sub_body, E_sub_body, Ne_3d, Ec_3d, conv]

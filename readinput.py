@@ -26,7 +26,7 @@ ELE_TAUW = 1e-13; ELE_CQ = 1
 # BIAS DIRECTIVE
 Vg1 = 0.0   #vgtop
 Vg2 = 0.0   #vgbot
-Vs = 0.0; Vd = 0.05; Vg_step = 0.1; Vd_step = 0.35
+Vs = 0.0; Vdi = 0.05; Vg_step = 0.1; Vd_step = 0.35
 Ng_step = 4; Nd_step = 1; Vd_initial = 0.1
 
 # MATERIAL DIRECTIVE
@@ -184,3 +184,6 @@ if transport_model1 == 6:
 
 class fermiflag1:
     value = fermiflag
+
+class Vdc:
+    value = Vdi

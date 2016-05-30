@@ -14,6 +14,7 @@ def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junct
 
     transport_model = transportmodel.value
     fermi_flag = fermiflag1.value
+    Vd = Vdc.value
 
     Lsda=round(Lsd/dx)
     Lg_topa=round(Lg_top/dx)

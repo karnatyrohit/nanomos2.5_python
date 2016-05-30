@@ -7,6 +7,7 @@ from readinput import *
 from dummy import dummy
 from dummy_prime import dummy_prime
 
+
 def poisson(spNd, spFn, Ec_old, F_prime, div_avd, charge_fac, Eg1, Eg2, Es, Ed, Nx, Ny, Ntotal):
     Temp = Te
     transport_model = transportmodel.value
@@ -283,7 +284,7 @@ def poisson(spNd, spFn, Ec_old, F_prime, div_avd, charge_fac, Eg1, Eg2, Es, Ed, 
         Ec = Ec+delta_Ec
         error_inner = max(abs(np.real(F)))
         print '%s %e \n' % ('error_inner = ', error_inner)
-        max_delta_Ec = max(abs(np.real(delta_Ec.toarray())))
+        max_delta_Ec = max(abs(np.real(delta_Ec.todense())))
         MF_prime = np.zeros((Ntotal, Ntotal))
         F = np.zeros((Ntotal, 1))
 

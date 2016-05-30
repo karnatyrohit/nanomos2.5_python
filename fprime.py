@@ -21,7 +21,7 @@ def fprime(Nx, Ny, Ntotal, F_prime):
     ###########################################################################
     ####################Top gate insulator region##############################
     ###########################################################################
-    for i_node in range(0, (Nx*(t_topa+1))):
+    for i_node in np.arange(0, (Nx*(t_topa+1))):
         if i_node >= 0 and i_node < Lsda:
             F_prime[i_node, i_node] = 1
             F_prime[i_node, i_node+Nx] = -1
@@ -49,7 +49,7 @@ def fprime(Nx, Ny, Ntotal, F_prime):
 
     # Bottom gate insulator region
     ###########################
-    for i_node in range((Ntotal-Nx*(t_bota+1)), Ntotal):
+    for i_node in np.arange((Ntotal-Nx*(t_bota+1)), Ntotal):
         if(i_node >= (Ntotal-Nx*(t_bota+1)) and i_node < (Ntotal-Nx*t_bota)):
             F_prime[i_node, i_node-Nx-1] = -dy/dx/8
             F_prime[i_node, i_node-Nx] = -(dx/dy-dy/dx/4)
@@ -78,7 +78,7 @@ def fprime(Nx, Ny, Ntotal, F_prime):
     # Specify the F_prime matrix in
     # the silicon film region
     ###########################
-    for i_node in range((Nx*(t_topa+1)), (Ntotal-Nx*(t_bota+1))):
+    for i_node in np.arange((Nx*(t_topa+1)), (Ntotal-Nx*(t_bota+1))):
         F_prime[i_node, i_node-Nx] = -dx/dy
         F_prime[i_node, i_node-1] = -dy/dx
         F_prime[i_node, i_node] = 2*(dx/dy+dy/dx)
@@ -90,7 +90,7 @@ def fprime(Nx, Ny, Ntotal, F_prime):
     ###########################
     i_node_l = 0
     i_node_r = Nx - 1
-    for iii in range(0, Ny):
+    for iii in np.arange(0, Ny):
         if iii == 0:
             F_prime[i_node_l, :] = 0
             F_prime[i_node_l, i_node_l] = 2

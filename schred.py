@@ -67,7 +67,7 @@ def schred(Ec_old, Nx, Ny, Ntotal, mx, my, mz):
     ################################MAIN COMPUTATION##############################
     ##############################################################################
 
-    for iii_vall in range(0, t_vall):
+    for iii_vall in np.arange(0, t_vall):
         m_ee = mz(iii_vall)*m_e
         if iii_vall == 3:
             E_v[2,:,:] = E_v [1,:,:]
@@ -76,7 +76,7 @@ def schred(Ec_old, Nx, Ny, Ntotal, mx, my, mz):
 
         tt=(h_bar^2)/(2*m_ee*((dy/refine)^2)*q)
 
-        for iii_col in range(0,Nx):
+        for iii_col in np.arange(0,Nx):
             if refine == 1:
                 U_vertical = MEc[:, iii_col]
             else:
@@ -90,7 +90,7 @@ def schred(Ec_old, Nx, Ny, Ntotal, mx, my, mz):
             meval=np.sort(evalu)
             i_order = np.argsort(evalu)
             E_v[iii_vall, iii_col,:] = (meval[0:max_subband])
-            for i_counter in range(0,max_subband):
+            for i_counter in np.arange(0,max_subband):
                 W_v_tem_1[1:Np_new-1] = np.conjugate(evac[:,i_order[i_counter]])*evac[:,i_order[i_counter]]
             if refine == 1:
                 W_v_tem_2 = W_v_tem_1

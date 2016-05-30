@@ -105,10 +105,10 @@ def current(Ne, Ec, NE_sub, E_sub, Nx, Ny, Ntotal, mx, my ,mz ):
     ###########################################################################
         U_bias = np.zeros((Nx,1))
 
-        for i_val in range(0, t_vall):
+        for i_val in np.arange(0, t_vall):
             Ie_2d = 2*q/h_bar**2*np.sqrt(mx[i_val]*m_e/2)*((k_B*Temp/q)*q/np.pi)**(3/2)
 
-            for i_sub in range(0, max_subband):
+            for i_sub in np.arange(0, max_subband):
                 U_bias = E_sub[i_val, :,i_sub]
                 Ec_peak = max(U_bias)
 

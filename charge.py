@@ -111,7 +111,7 @@ def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junct
         channel_e = junction_r
         Fn_slope = (-Vd-(-Vs))/(channel_e-channel_s)
 
-        for i_node in range(0,Nx):
+        for i_node in np.arange(0,Nx):
             if i_node < channel_s:
                 Fn[i_node] = -Vs-Ez
             elif i_node >= channel_e - 1:
@@ -123,8 +123,8 @@ def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junct
             elif fermi_flag == 0:
                 Ns[i_node] = Ncc*np.exp((Fn[i_node]-U_bias[i_node])/(k_B*Temp/q))
 
-        for iii_row in range((Nx*(t_topa+1))/Nx, (Ntotal-Nx*t_bota)/Nx-2):
-            for iii_col in range(0, Nx):
+        for iii_row in np.arange((Nx*(t_topa+1))/Nx, (Ntotal-Nx*t_bota)/Nx-2):
+            for iii_col in np.arange(0, Nx):
                 i_node = iii_row*Nx+iii_col
                 Ne_new[i_node] = (np.sin((iii_row+1-(Nx*(t_topa+1))/Nx) * dy/t_si*np.pi)**2) * Ns[iii_col]*2/t_si
 
@@ -136,14 +136,14 @@ def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junct
         [U_sub, W_sub] = schred(Ec_old, Nx, Ny, Ntotal, mx, my, mz)
         E_sub = U_sub
 
-        for i_val in range(0, t_vall):
+        for i_val in np.arange(0, t_vall):
             Ne_2d_1 = 2*(np.sqrt(mx[i_val]*my[i_val])*m_e*k_B*Temp)/(2*np.pi*h_bar**2)
             Ne_2d_2 = Ne_2d_1*2/np.pi**0.5
 
-            for i_sub in range(0,max_subband):
+            for i_sub in np.arange(0,max_subband):
                 U_bias = U_sub[i_val, :, i_sub]
                 [Ec_peak,i_peak] = np.max(U_bias), np.argmax(U_bias)
-                for i_node in range (0,Nx):
+                for i_node in np.arange (0,Nx):
                     MEc_peak = (Ec_peak-U_bias[i_node])/(k_B*Temp/q)
                     zeta_s = (-Vs-U_bias[i_node])/(k_B*Temp/q)
                     zeta_d = (-Vd-U_bias[i_node])/(k_B*Temp/q)
@@ -167,8 +167,8 @@ def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junct
     ################################################################################
 
     if ox_pnt_flag == 0: # No electron penetration into oxide
-        for iii_row in range ((Nx*(t_topa+1))/Nx,(Ntotal-Nx*t_bota)/Nx-2):
-            for iii_col in range(0,Nx):
+        for iii_row in np.arange ((Nx*(t_topa+1))/Nx,(Ntotal-Nx*t_bota)/Nx-2):
+            for iii_col in np.arange(0,Nx):
                 i_node=iii_row*Nx+iii_col
                 Fn_new[i_node] = anti_dummy(Ne_new[i_node]/Nc,dummy_flag,fermi_flag)*(k_B*Temp/q)+Ec_old[i_node]
     elif ox_pnt_flag == 1: # assuming electron penetration into oxide

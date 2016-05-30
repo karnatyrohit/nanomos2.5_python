@@ -74,7 +74,7 @@ def poisson(spNd, spFn, Ec_old, F_prime, div_avd, charge_fac, Eg1, Eg2, Es, Ed, 
     #################################EVALUATE F#########################################
 
     #############################Top gate insulator region##############################
-            for i in range(0,Nx*(t_topa+1)):
+            for i in np.arange(0,Nx*(t_topa+1)):
                 if(i >= 0 and i < Lsda):
                     F[i] = Ec[i]-Ec[i+Nx]
                 elif(i >= Lsda and i <= (Lsda+Lg_topa)):
@@ -99,7 +99,7 @@ def poisson(spNd, spFn, Ec_old, F_prime, div_avd, charge_fac, Eg1, Eg2, Es, Ed, 
                         -(dx/dy)*eps_top/eps_si*Ec[i+Nx]
 
             #########################Bottom gate insulator region##############################
-            for i in range((Ntotal-Nx*(t_bota+1)),Ntotal):
+            for i in np.arange((Ntotal-Nx*(t_bota+1)),Ntotal):
                 if(i >= (Ntotal-Nx*(t_bota+1)) and i<(Ntotal-Nx*t_bota)):
                     F[i] = -1/8*(dy/dx)*Ec[i-Nx-1] \
                         - (dx/dy-1/4/(dx/dy))*Ec[i-Nx] \
@@ -124,13 +124,13 @@ def poisson(spNd, spFn, Ec_old, F_prime, div_avd, charge_fac, Eg1, Eg2, Es, Ed, 
                           - (dx/dy)*eps_bot/eps_si*Ec[i+Nx]
 
             #####################Specify the F matrix in the silicon film region################
-            for i in range(Nx*(t_topa+1),(Ntotal-Nx*(t_bota+1)+1)-1):
+            for i in np.arange(Nx*(t_topa+1),(Ntotal-Nx*(t_bota+1)+1)-1):
                 F[i] = -(dx/dy)*Ec[i-Nx]-(dy/dx)*Ec[i-1]+2*(dx/dy+dy/dx)*Ec[i]+dummy_fun[i]-(dy/dx)*Ec[i+1]-(dx/dy)*Ec[i+Nx]
 
             #***************`*Modify the F matrix at the right and left boundaries***************
             i_l = 0
             i_r = Nx-1
-            for j in range(0,Ny):
+            for j in np.arange(0,Ny):
                 if j == 0:
                     F[i_l]=2*Ec[i_l]-Ec[i_l+1]-Ec[i_l+Nx]
                     F[i_r]=2*Ec[i_r]-Ec[i_r-1]-Ec[i_r+Nx]
@@ -159,8 +159,8 @@ def poisson(spNd, spFn, Ec_old, F_prime, div_avd, charge_fac, Eg1, Eg2, Es, Ed, 
 
     ###############################EVALUATE MF_prime###################################
     # MF_prime matrix in the silicon film region
-            for j_row in range (Nx*(t_topa+1)/Nx, (Ntotal-Nx*t_bota)/Nx-2):
-                for j_col in range(1,Nx-1):
+            for j_row in np.arange (Nx*(t_topa+1)/Nx, (Ntotal-Nx*t_bota)/Nx-2):
+                for j_col in np.arange(1,Nx-1):
                     ii = j_row*Nx+j_col
                     MF_prime[ii,ii] = dummy_fun_prime[ii]
 
@@ -171,7 +171,7 @@ def poisson(spNd, spFn, Ec_old, F_prime, div_avd, charge_fac, Eg1, Eg2, Es, Ed, 
     #################################EVALUATE F########################################
 
     ##########################Top gate insulator region################################
-            for i in range(0, Nx*(t_topa+1)):
+            for i in np.arange(0, Nx*(t_topa+1)):
                 if(i >= 0 and i < Lsda+1-1) :
                     F[i] = Ec[i]-Ec[i+Nx]
                 elif(i >= Lsda and i < (Lsda+Lg_topa)+1):
@@ -197,7 +197,7 @@ def poisson(spNd, spFn, Ec_old, F_prime, div_avd, charge_fac, Eg1, Eg2, Es, Ed, 
                             - (dx/dy)*eps_top/eps_si*Ec[i+Nx]
 
         ############################Bottom gate insulator region###########################
-            for i in range((Ntotal-Nx*(t_bota+1)),Ntotal):
+            for i in np.arange((Ntotal-Nx*(t_bota+1)),Ntotal):
                 if(i >= (Ntotal-Nx*(t_bota+1)) and i < Ntotal-Nx*t_bota):
                     F[i] = -1/8*(dy/dx)*Ec[i-Nx-1] \
                         - (dx/dy-1/4/(dx/dy))*Ec[i-Nx] \
@@ -223,13 +223,13 @@ def poisson(spNd, spFn, Ec_old, F_prime, div_avd, charge_fac, Eg1, Eg2, Es, Ed, 
                         - (dx/dy)*eps_bot/eps_si*Ec[i+Nx]
 
         ##################Specify the F matrix in the silicon film region#################
-            for i in range(Nx*(t_topa+1), (Ntotal-Nx*(t_bota+1)+1)-1):
+            for i in np.arange(Nx*(t_topa+1), (Ntotal-Nx*(t_bota+1)+1)-1):
                 F[i] = -(dx/dy)*Ec[i-Nx]-(dy/dx)*Ec[i-1]+2*(dx/dy+dy/dx)*Ec[i]+dummy_fun[i]-(dy/dx)*Ec[i+1]-(dx/dy)*Ec[i+Nx]
 
         #***************Modify the F matrix at the right and left boundaries**************
             i_l = 0
             i_r = Nx-1
-            for j in range(0, Ny):
+            for j in np.arange(0, Ny):
                 if j == 0:
                     F[i_l] = 2*Ec[i_l]-Ec[i_l+1]-Ec[i_l+Nx]
                     F[i_r] = 2*Ec[i_r]-Ec[i_r-1]-Ec[i_r+Nx]
@@ -257,10 +257,10 @@ def poisson(spNd, spFn, Ec_old, F_prime, div_avd, charge_fac, Eg1, Eg2, Es, Ed, 
 
         #############################EVALUATE MF_prime##################################
         # MF_prime matrix in the silicon film region
-            for i in range(Nx, (Ntotal-Nx+1)-1):
+            for i in np.arange(Nx, (Ntotal-Nx+1)-1):
                 MF_prime[i, i] = dummy_fun_prime[i]
 
-            for j in range(1, (Ny-1)):
+            for j in np.arange(1, (Ny-1)):
                 MF_prime[(j-1)*Nx+1, (j-1)*Nx+1] = 0
                 MF_prime[j*Nx, j*Nx] = 0
         ###############END OF EVALUATION FOR PENETRATION INTO OXIDE ###################
@@ -272,7 +272,7 @@ def poisson(spNd, spFn, Ec_old, F_prime, div_avd, charge_fac, Eg1, Eg2, Es, Ed, 
         ############################SOLVING FOR delta_Ec###############################
         delta_Ec = - np.linalg.solve(sparse.csr_matrix(MF_prime), sparse.csr_matrix(F))
 
-        for i in range(0, Ntotal):
+        for i in np.arange(0, Ntotal):
             if abs(delta_Ec(i)) <= 1:
                 delta_Ec[i] = delta_Ec[i]
             elif 1<abs(delta_Ec(i)) and abs(delta_Ec(i)) <3.7:

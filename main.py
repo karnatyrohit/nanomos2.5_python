@@ -174,7 +174,7 @@ def main():
     Nd2D = np.reshape(Nd,(Ny,Nx)).transpose()
     #============Modified. Mar 18, 2002==================
 
-    for i in range(0, nu_scatter):
+    for i in np.arange(0, nu_scatter):
         Info_scatter_old[i,2] = i+1
     #Info_scatter_old(i,4)=1/(1/mu_low+...
     #1/(mu_min+(mu_max-mu_min)./(1+(abs(Nd(Nx*round(t_top/dy)+1+Nx+i))/Nref).^alpha)))
@@ -272,7 +272,7 @@ def main():
     #transport_model=trans_temp;
     Eg1_temp = Eg1
     Eg2_temp = Eg2
-    for ii_vg in range (0,Ng_step+1):
+    for ii_vg in np.arange (0,Ng_step+1):
         Vg_bias[ii_vg] = Vg1+Vg_step*(ii_vg)
         Eg1 = Eg1_temp - Vg_step*(ii_vg)
         if DG_flag == 1:
@@ -287,7 +287,7 @@ def main():
         spFn=SpFnin
 
     ###################################DRAIN BIAS LOOP##################################
-        for ii_vd in range(0, Nd_step+1):
+        for ii_vd in np.arange(0, Nd_step+1):
             Vd_bias[ii_vd] = Vd_temp+Vd_step*(ii_vd)
             Ed = Ed_temp-Vd_step*(ii_vd)
             Vd = Vd_bias[ii_vd]

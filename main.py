@@ -71,7 +71,7 @@ def main():
         Nsd1.value = ((t_si/dy)/(t_si/dy-1))*N_sd
         N_sd = Nsd1.value
         Nbody1.value = ((t_si/dy)/(t_si/dy-1))*N_body
-        N_body = Nbody1
+        N_body = Nbody1.value
 
     Eg1 = -Vg1+phi_top-psi_si
     Eg2 = -Vg2+phi_bot-psi_si
@@ -327,7 +327,7 @@ def main():
                 print 'current Is has to be established- coding left'
                 #Ie_tem = Is   # Rohit look into this global variable
             else:
-                [Ie_tem, Ie_sub, Te_sub, Mu_sub] = current(spNe, spEc, Ne_sub, E_sub)
+                [Ie_tem, Ie_sub, Te_sub, Mu_sub] = current(spNe, spEc, Ne_sub, E_sub, Nx, Ny, Ntotal, mx, my, mz)
     ##########################END OF SELF CONSISTENT LOOP##############################
             Vggg = Vg_bias[ii_vg]
             Vddd = Vd_bias[ii_vd]

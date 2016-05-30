@@ -23,12 +23,12 @@ def doping(Nx, Ny, Ntotal, junction_l, junction_r, Nd, N_sd, N_body):
         decay_lend = (2/math.sqrt(2.3)*dopslope_d)
 
     ########################ASSUMING GAUSSIAN DISTRIBUTION########################
-    for iii_row in range(((Nx*(t_topa+1))/Nx), ((Ntotal-Nx*t_bota)/Nx-2)):
-        for iii_col in range(0, junction_l):
+    for iii_row in np.arange(((Nx*(t_topa+1))/Nx), ((Ntotal-Nx*t_bota)/Nx-2)):
+        for iii_col in np.arange(0, junction_l):
             i_node = iii_row*Nx+iii_col
             Nd[i_node] = N_sd-N_body
 
-        for iii_col in range(junction_l, junction_r-1):
+        for iii_col in np.arange(junction_l, junction_r-1):
             i_node = iii_row*Nx+iii_col
             if dopslope_s != 0 and dopslope_d != 0:
                 Nd[i_node] = N_sd*np.exp(-((iii_col-junction_l+1)*dx/decay_lens)**2)+N_sd*np.exp(-((iii_col-junction_r+1)*dx/decay_lend)**2)-N_body
@@ -37,7 +37,7 @@ def doping(Nx, Ny, Ntotal, junction_l, junction_r, Nd, N_sd, N_body):
             elif dopslope_s == 0 and dopslope_d != 0:
                 Nd[i_node] = N_sd*np.exp(-((iii_col-junction_r)*dx/decay_lend)**2)-N_body
 
-        for iii_col in range(junction_r-1, Nx):
+        for iii_col in np.arange(junction_r-1, Nx):
             i_node = iii_row*Nx+iii_col
             Nd[i_node] = N_sd-N_body
 
@@ -47,16 +47,16 @@ def doping(Nx, Ny, Ntotal, junction_l, junction_r, Nd, N_sd, N_body):
 
     ######################ABRUPT PROFILE on BOTH SIDE#########################
     elif dopslope_s == 0 and dopslope_d == 0:
-        for iii_row in range((Nx*(t_topa+1))/Nx), ((Ntotal-Nx*t_bota)/Nx-2):
-            for iii_col in range(0, junction_l):
+        for iii_row in np.arange((Nx*(t_topa+1))/Nx), ((Ntotal-Nx*t_bota)/Nx-2):
+            for iii_col in np.arange(0, junction_l):
                 i_node = iii_row*Nx+iii_col
                 Nd[i_node] = N_sd-N_body
 
-            for iii_col in range(junction_l, junction_r-1):
+            for iii_col in np.arange(junction_l, junction_r-1):
                 i_node = iii_row*Nx+iii_col
                 Nd[i_node] = -N_body
 
-            for iii_col in range(junction_r-1, Nx):
+            for iii_col in np.arange(junction_r-1, Nx):
                 i_node = iii_row*Nx+iii_col
                 Nd[i_node] = N_sd-N_body
 

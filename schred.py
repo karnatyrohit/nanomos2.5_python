@@ -3,7 +3,7 @@
 ##########################(Zhibin Ren 7-28-00)###############################
 #############################################################################
 
-from nanomos import *
+from readinput import *
 from scipy import interpolate
 import numpy as np
 from numpy import linalg as LA

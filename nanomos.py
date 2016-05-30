@@ -4,7 +4,7 @@
 
 import time
 from main import main
-from saveoutput import saveoutput
+#from saveoutput import saveoutput
 from readinput import *
 
 print '*******************nanoMOS2.0**********************'
@@ -23,7 +23,7 @@ print "Total computation time was %d seconds.\n" % total_time
 #########################SAVE AND PLOT OUTPUT############################
 #########################################################################
 
-saveoutput(Ec, Ne, Ie, Ne_sub, E_sub, Te_sub, conv)
+#saveoutput(Ec, Ne, Ie, Ne_sub, E_sub, Te_sub, conv)
 
 #########################################################################
 ######################## THE END OF NANOMOS #############################

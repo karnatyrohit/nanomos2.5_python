@@ -119,8 +119,8 @@ def main():
     ###############################################################################
     #############################START OF INITIALIZATION###########################
     ###############################################################################
-    Nd = np.zeros(Ntotal, 1) #unchanged through the entire calculation
-    F_prime = np.zeros(Ntotal, Ntotal) #unchanged through the entire
+    Nd = np.zeros((Ntotal, 1)) #unchanged through the entire calculation
+    F_prime = np.zeros((Ntotal, Ntotal)) #unchanged through the entire
                                    #calculation
 
     Ne_old = np.zeros((Ntotal, 1))

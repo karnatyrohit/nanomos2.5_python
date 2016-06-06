@@ -27,8 +27,8 @@ def main():
     t_sia = round(t_si/dy)
 
     #Parameters for ET model
-    delta_T_1 = 5/2 #energy flux parameter one
-    delta_T_2 = 5/2 #energy flux parameter two
+    delta_T_1 = 5.0/2.0 #energy flux parameter one
+    delta_T_2 = 5.0/2.0 #energy flux parameter two
     dim_c=2 #degree of carrier freedom
 
 
@@ -67,7 +67,7 @@ def main():
     #SPECIFY THE NEUTRAL BOUNDARY ###########################################################
     #Calculate boundary Ec based neutral charge and Fermi-Dirac statistics###################
     #########################################################################################
-    if ox_pnt_flag==0:
+    if ox_pnt_flag == 0:
         Nsd1.value = ((t_si/dy)/(t_si/dy-1))*N_sd
         N_sd = Nsd1.value
         Nbody1.value = ((t_si/dy)/(t_si/dy-1))*N_body
@@ -156,13 +156,14 @@ def main():
     #############START OF SELF CONSISTENT CALCULATION OF POISSON AND ############
     #############################TRANSPORT EQUATIONS#############################
     #############################################################################
+    nu_scatter = 0
     if transport_model == 5:
         nu_scatter = Nx-2
     elif transport_model == 2:
         nu_scatter = Nx
 
-    Info_scatter_old = np.zeros(nu_scatter,4)
-    Info_scatter_new = np.zeros(nu_scatter,4)
+    Info_scatter_old = np.zeros((nu_scatter, 4))
+    Info_scatter_new = np.zeros((nu_scatter, 4))
 
     #see reference, MEDICI manual, p2-15
     mu_min = 55*1e-4
@@ -180,14 +181,14 @@ def main():
     #1/(mu_min+(mu_max-mu_min)./(1+(abs(Nd(Nx*round(t_top/dy)+1+Nx+i))/Nref).^alpha)))
     #Info_scatter_old(i,4)=1/(1/mu_low+1/(mu_min+(mu_max-mu_min)./(1+(abs(Nd2D(i,round(Ny/2)))/Nref).^alpha)))
     #============No Methiessen's rule========================================================
-        Info_scatter_old[i,4] = mu_min+(mu_low-mu_min)/(1+(abs(Nd2D[i, round(Ny/2) - 1])/Nref)**alpha)  # Rohit - Check for error due to -1
+        Info_scatter_old[i,4] = mu_min+(mu_low-mu_min)/(1+(abs(Nd2D[i, round(Ny/2.0) - 1])/Nref)**alpha)  # Rohit - Check for error due to -1
     #========================================================================================
 
     #keyboard
     #############################compress matrix#################################
     spEc = sparse.csr_matrix(Ec_old)
     spNe = sparse.csr_matrix(Ne_old)
-    spNd = sparse.csr_matrix(Nd)
+    spNd = sparse.lil_matrix(Nd)              #rohit - csr vs lil?
     F_prime = sparse.csr_matrix(F_prime)
 
     ########################START OF INITIAL GUESS ##############################
@@ -208,7 +209,9 @@ def main():
     Ne_sub_old = Ne_sub
     E_sub_old = E_sub
 
-    [Ec_new] = poisson(spNd,spFn,spEc, F_prime, div_avd, charge_fac, Eg1, Eg2, Es, Ed, Nx, Ny, Ntotal)
+    [Ec_new] = poisson(Nd, Fn_new, Ec_old, F_prime, div_avd, charge_fac, Eg1, Eg2, Es, Ed, Nx, Ny, Ntotal)  #Rohit - experiment with sparse
+
+    Ec_new = np.reshape(Ec_new, (Ntotal, 1))
 
     spEc = sparse.csr_matrix(Ec_new)
 
@@ -263,6 +266,8 @@ def main():
     E_sub_oldin = E_sub_old
     SpNdin = spNd
     SpFnin = spFn
+    Fnin = Fn_new
+    Ecin = Ec_new
 
     ############################END OF INITIAL GUESS OF Ec##############################
 
@@ -285,7 +290,8 @@ def main():
         E_sub_old=E_sub_oldin
         spNd=SpNdin
         spFn=SpFnin
-
+        Fn_new = Fnin
+        Ec_new = Ecin
     ###################################DRAIN BIAS LOOP##################################
         for ii_vd in np.arange(0, Nd_step+1):
             Vd_bias[ii_vd] = Vd_temp+Vd_step*(ii_vd)
@@ -308,13 +314,17 @@ def main():
                 Ne_sub_old = Ne_sub
                 E_sub_old = E_sub
 
-                [Ec_new] = poisson(spNd,spFn,spEc, F_prime, div_avd, charge_fac, Eg1, Eg2, Es, Ed, Nx, Ny, Ntotal)
+                [Ec_new] = poisson(Nd,Fn_new, Ec_new, F_prime, div_avd, charge_fac, Eg1, Eg2, Es, Ed, Nx, Ny, Ntotal)  #Rohit - again sparse 
+
+                Ec_new = np.reshape(Ec_new,(Ntotal,1))
 
                 spEc = sparse.csr_matrix(Ec_new)
                 iter_outer = iter_outer+1
                 spEcdiff2 = spEc - spEc_old
                 Ecdiff2 = spEcdiff2.todense()
                 error_outer = max(abs(np.real(Ecdiff2)))
+                print "iter_outer = %d" % iter_outer
+                print 'error_outer = %e' % error_outer
 
                 converge = np.append(converge, [error_outer])
 
@@ -331,15 +341,17 @@ def main():
     ##########################END OF SELF CONSISTENT LOOP##############################
             Vggg = Vg_bias[ii_vg]
             Vddd = Vd_bias[ii_vd]
+            print 'Vggg = %f' % Vggg
+            print 'Vddd = %f' % Vddd
 
             Ie[ii_vg,ii_vd] = np.mean(np.real(Ie_tem))
-            Mu_sub_body[:ii_vg,ii_vd,:,:] = Mu_sub.todense()
-            Ie_sub_body[:, ii_vg, ii_vd, :, :] = Ie_sub.todense()
-            Ne_sub_body[:, ii_vg, ii_vd, :, :] = Ne_sub.todense()
-            Te_sub_body[:, ii_vg, ii_vd, :, :] = Te_sub.todense()
-            E_sub_body[:, ii_vg, ii_vd, :, :] = E_sub.todense()
-            Ne_3d[ii_vd, :, ii_vg] = Ne_new.todense()
-            Ec_3d[ii_vd, :, ii_vg] = Ec_new.todense()
+            Mu_sub_body[:,ii_vg,ii_vd,:,:] = Mu_sub
+            Ie_sub_body[:, ii_vg, ii_vd, :, :] = Ie_sub
+            Ne_sub_body[:, ii_vg, ii_vd, :, :] = Ne_sub
+            Te_sub_body[:, ii_vg, ii_vd, :, :] = Te_sub
+            E_sub_body[:, ii_vg, ii_vd, :, :] = E_sub
+            Ne_3d[ii_vd, :, ii_vg] = np.reshape(Ne_new, Ntotal)
+            Ec_3d[ii_vd, :, ii_vg] = np.reshape(Ec_new, Ntotal)
             conv[ii_vg, ii_vd] = converge
 
     return [Ie, Ie_sub_body, Te_sub_body, Ne_sub_body, E_sub_body, Ne_3d, Ec_3d, conv]

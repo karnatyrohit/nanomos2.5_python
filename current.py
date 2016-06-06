@@ -17,7 +17,7 @@ def current(Ne, Ec, NE_sub, E_sub, Nx, Ny, Ntotal, mx, my ,mz ):
     eta = 1e-6j
     Ef_tail_low = 0.01
     Ef_tail_up = 0.3
-    E_step = criterion_outer/2  # 0.5 times criterion_outer
+    E_step = criterion_outer/2.0  # 0.5 times criterion_outer
 
     ####MODEL 4 related parameters
     e_field_limit = 1.0  # in V/m
@@ -64,9 +64,9 @@ def current(Ne, Ec, NE_sub, E_sub, Nx, Ny, Ntotal, mx, my ,mz ):
 
     #########################INITIALIZATION#######################################
     Ie = np.zeros((Nx,1))
-    Ie_sub = np.zeros((Nx,max_subband,t_vall))
-    Te_sub = np.zeros((Nx,max_subband,t_vall))
-    Fn_sub = np.zeros((Nx,max_subband,t_vall))
+    Ie_sub = np.zeros((t_vall, Nx,max_subband))
+    Te_sub = np.zeros((t_vall, Nx,max_subband))
+    Fn_sub = np.zeros((t_vall, Nx,max_subband))
     #E_sub = np.zeros((Nx,max_subband,t_vall))
     #Ne_sub = np.zeros((Nx,max_subband,t_vall))
 
@@ -106,14 +106,14 @@ def current(Ne, Ec, NE_sub, E_sub, Nx, Ny, Ntotal, mx, my ,mz ):
         U_bias = np.zeros((Nx,1))
 
         for i_val in np.arange(0, t_vall):
-            Ie_2d = 2*q/h_bar**2*np.sqrt(mx[i_val]*m_e/2)*((k_B*Temp/q)*q/np.pi)**(3/2)
+            Ie_2d = 2.0*q/h_bar**2*np.sqrt(mx[i_val]*m_e/2.0)*((k_B*Temp/q)*q/np.pi)**(3.0/2.0)
 
             for i_sub in np.arange(0, max_subband):
                 U_bias = E_sub[i_val, :,i_sub]
                 Ec_peak = max(U_bias)
 
                 Ie_tem = 0
-                Ie_tem = Ie_2d*(fermi(((-Vs-Ec_peak)/(k_B*Temp/q)),fermi_flag,1/2)-fermi(((-Vd-Ec_peak)/(k_B*Temp/q)),fermi_flag,1/2))
+                Ie_tem = Ie_2d*(fermi(((-Vs-Ec_peak)/(k_B*Temp/q)),fermi_flag,1.0/2.0)-fermi(((-Vd-Ec_peak)/(k_B*Temp/q)),fermi_flag,1.0/2.0))
                 Ie_sub[i_val, :, i_sub] = Ie_tem*np.ones(Nx)
                 Ie = Ie+Ie_tem*np.ones(Nx)
 

@@ -19,8 +19,8 @@ def integral(zeta_s, zeta_d, upper_lim, fermi_flag):
         nx = round(tem_lim/dx)+2
         x = np.linspace(0, tem_lim, nx)
         dx = x[1]
-        dummy1 = fermi(zeta_s-x**2, fermi_flag, -1/2)
-        y1 = (sum(dummy1)-dummy1[0]/2-dummy1[nx-1]/2)*dx
+        dummy1 = fermi(zeta_s-x**2, fermi_flag, -1.0/2.0)
+        y1 = (sum(dummy1)-dummy1[0]/2.0-dummy1[nx-1]/2.0)*dx
     else:
         y1 = 0
 
@@ -32,8 +32,8 @@ def integral(zeta_s, zeta_d, upper_lim, fermi_flag):
     nx = round((tem_lim_h-tem_lim_l)/dx)+2
     x = np.linspace(tem_lim_l, tem_lim_h, nx)
     dx = x[1]-x[0]
-    dummy2 = fermi(zeta_d-x**2, fermi_flag, -1/2)
-    y2 = (sum(dummy2)-dummy2[0]/2-dummy2[nx-1]/2)*dx
+    dummy2 = fermi(zeta_d-x**2, fermi_flag, -1.0/2.0)
+    y2 = (sum(dummy2)-dummy2[0]/2.0-dummy2[nx-1]/2)*dx
 
     tem_lim_l = 0
     tem_lim_h = (max(upper_lim+E_tail, zeta_s+E_tail))**0.5
@@ -41,8 +41,8 @@ def integral(zeta_s, zeta_d, upper_lim, fermi_flag):
     nx = round((tem_lim_h-tem_lim_l)/dx)+2
     x = np.linspace(tem_lim_l, tem_lim_h, nx)
     dx = x[1]-x[0]
-    dummy3 = fermi(zeta_s-x**2, fermi_flag, -1/2)
-    y3 = (sum(dummy3)-dummy3[1]/2-dummy3[nx-1]/2)*dx
+    dummy3 = fermi(zeta_s-x**2, fermi_flag, -1.0/2.0)
+    y3 = (sum(dummy3)-dummy3[1]/2.0-dummy3[nx-1]/2.0)*dx
 
     y = y1+y2+y3
 

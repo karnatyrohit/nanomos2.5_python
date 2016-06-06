@@ -16,7 +16,7 @@ t_si = 3; t_top = 1.0; t_bot = 1.0; Te = 300  #tsi, tox_top,tox_bot, temp
 #
 
 # GRID DIRECTIVE
-dx=0.3; dy=0.1; refine=1
+dx=0.3; dy=0.1; refine=1.0
 
 
 # TRANSPORT DIRECTIVE
@@ -69,7 +69,7 @@ Lg_bot *= 1e-9
 Lsd *= 1e-9
 overlap_s *= 1e-9
 overlap_d *= 1e-9
-dopslope_d *= 1e-9
+dopslope_s *= 1e-9
 dopslope_d *= 1e-9
 t_si *= 1e-9
 t_bot *= 1e-9
@@ -176,8 +176,7 @@ if criterion_outer <= 1e-4 and (transport_model1 == 2 or transport_model1 == 3):
 if t_si < 2e-9 and Te > 250:
     dummy_flag = 0
 else:
-    dummy_flag = 1/2
-
+    dummy_flag = 0.5
 
 if transport_model1 == 6:
     fermiflag = 0

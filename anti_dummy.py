@@ -20,9 +20,9 @@ def anti_dummy(x, dummy_flag, fermi_flag):
         elif fermi_flag == 1:
             y = np.log(np.exp(x)-1)
 
-    elif dummy_flag == 1/2:
+    elif dummy_flag == 0.5:
         if fermi_flag == 0:
             y = np.log(x)
         elif fermi_flag == 1:
-            y = np.log(x) + 3.53553e-1*x - 4.95009e-3*x**2 + 1.48386e-4*x**3 - 4.42563e-6*x**4
+            y = np.log(x) + (3.53553e-1)*(x) - (4.95009e-3)*(x**2) + (1.48386e-4)*(x**3) - (4.42563e-6)*(x**4)
     return y

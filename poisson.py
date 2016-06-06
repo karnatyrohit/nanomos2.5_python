@@ -3,6 +3,7 @@
 ###########################################################################
 
 from scipy import sparse
+from scipy.sparse.linalg import spsolve
 from readinput import *
 from dummy import dummy
 from dummy_prime import dummy_prime
@@ -59,8 +60,9 @@ def poisson(spNd, spFn, Ec_old, F_prime, div_avd, charge_fac, Eg1, Eg2, Es, Ed, 
     ##########################START OF INNER LOOP######################################
 
     while error_inner >= criterion_inner:
+        Ec = np.reshape(Ec, (Ntotal, 1))
         iter_inner = iter_inner+1
-        print '%s %i \n' % ('iter_inner = ',iter_inner)
+        print '%s %i \n' % ('iter_inner = ', iter_inner)
 
         ####################THE START OF DUMMY VARIABLE DEFINITION#################
         dummy_fun = charge_fac * ((Nd+div_avdt)/Nc - dummy((Fn-Ec)/(k_B*Temp/q), dummy_flag,fermi_flag))
@@ -69,47 +71,47 @@ def poisson(spNd, spFn, Ec_old, F_prime, div_avd, charge_fac, Eg1, Eg2, Es, Ed, 
 
         ########################THE END OF DUMMY VARIABLE DEFINITION###############
 
-        if ox_pnt_flag == 0: # NO ELECTRON PENETRATION INTO OXIDE REGIONS
+        if ox_pnt_flag == 0:  # NO ELECTRON PENETRATION INTO OXIDE REGIONS
 
     #################################EVALUATE F#########################################
 
     #############################Top gate insulator region##############################
             for i in np.arange(0,Nx*(t_topa+1)):
-                if(i >= 0 and i < Lsda):
+                if(i >= 0 and i <= Lsda-1):
                     F[i] = Ec[i]-Ec[i+Nx]
                 elif(i >= Lsda and i <= (Lsda+Lg_topa)):
                     F[i] = Ec[i]-Eg1
-                elif(i >= (Lsda+Lg_topa)+1 and i<Nx):
+                elif(i >= (Lsda+Lg_topa)+1 and i<=Nx-1):
                     F[i] = Ec[i]-Ec[i+Nx]
-                elif(i >= (Nx*t_topa) and i < Nx*(t_topa+1)):
-                    F[i] = -1/8*(dy/dx)*eps_top/eps_si*Ec[i-Nx-1] \
-                        - (dx/dy-1/4/(dx/dy))*eps_top/eps_si*Ec[i-Nx] \
-                        - 1/8*(dy/dx)*eps_top/eps_si*Ec[i-Nx+1] \
-                        - 3/8*(dy/dx)*(eps_top+eps_si)/eps_si*Ec[i-1] \
-                        + (dx/dy+3/4/(dx/dy))*(eps_top+eps_si)/eps_si*Ec[i] \
-                        - 3/8*(dy/dx)*(eps_top+eps_si)/eps_si*Ec[i+1] \
-                        - 1/8*(dy/dx)*Ec[i+Nx-1] \
-                        - (dx/dy-1/4/(dx/dy))*Ec[i+Nx] \
-                        - 1/8*(dy/dx)*Ec[i+Nx+1]
+                elif(i >= (Nx*t_topa) and i <= Nx*(t_topa+1) -1):
+                    F[i] = -1.0/8.0*(dy/dx)*eps_top/eps_si*Ec[i-Nx-1] \
+                        - (dx/dy-1/4.0/(dx/dy))*eps_top/eps_si*Ec[i-Nx] \
+                        - 1.0/8.0*(dy/dx)*eps_top/eps_si*Ec[i-Nx+1] \
+                        - 3.0/8.0*(dy/dx)*(eps_top+eps_si)/eps_si*Ec[i-1] \
+                        + (dx/dy+3.0/4.0/(dx/dy))*(eps_top+eps_si)/eps_si*Ec[i] \
+                        - 3.0/8.0*(dy/dx)*(eps_top+eps_si)/eps_si*Ec[i+1] \
+                        - 1.0/8.0*(dy/dx)*Ec[i+Nx-1] \
+                        - (dx/dy-1.0/4.0/(dx/dy))*Ec[i+Nx] \
+                        - 1.0/8.0*(dy/dx)*Ec[i+Nx+1]
                 else:
                     F[i] = -(dx/dy)*eps_top/eps_si*Ec[i-Nx] \
                         -(dy/dx)*eps_top/eps_si*Ec[i-1] \
-                        +2*(dx/dy+dy/dx)*eps_top/eps_si*Ec[i] \
+                        +2.0*(dx/dy+dy/dx)*eps_top/eps_si*Ec[i] \
                         -(dy/dx)*eps_top/eps_si*Ec[i+1] \
                         -(dx/dy)*eps_top/eps_si*Ec[i+Nx]
 
             #########################Bottom gate insulator region##############################
             for i in np.arange((Ntotal-Nx*(t_bota+1)),Ntotal):
                 if(i >= (Ntotal-Nx*(t_bota+1)) and i<(Ntotal-Nx*t_bota)):
-                    F[i] = -1/8*(dy/dx)*Ec[i-Nx-1] \
-                        - (dx/dy-1/4/(dx/dy))*Ec[i-Nx] \
-                        - 1/8*(dy/dx)*Ec[i-Nx+1] \
-                        - 3/8*(dy/dx)*(eps_bot+eps_si)/eps_si*Ec[i-1] \
-                        + (dx/dy+3/4/(dx/dy))*(eps_bot+eps_si)/eps_si*Ec[i] \
-                        - 3/8*(dy/dx)*(eps_bot+eps_si)/eps_si*Ec[i+1] \
-                        - 1/8*(dy/dx)*eps_bot/eps_si*Ec[i+Nx-1] \
-                        - (dx/dy-1/4/(dx/dy))*eps_bot/eps_si*Ec[i+Nx] \
-                        - 1/8*(dy/dx)*eps_bot/eps_si*Ec[i+Nx+1]
+                    F[i] = -1.0/8.0*(dy/dx)*Ec[i-Nx-1] \
+                        - (dx/dy-1.0/4.0/(dx/dy))*Ec[i-Nx] \
+                        - 1.0/8.0*(dy/dx)*Ec[i-Nx+1] \
+                        - 3.0/8.0*(dy/dx)*(eps_bot+eps_si)/eps_si*Ec[i-1] \
+                        + (dx/dy+3.0/4.0/(dx/dy))*(eps_bot+eps_si)/eps_si*Ec[i] \
+                        - 3.0/8.0*(dy/dx)*(eps_bot+eps_si)/eps_si*Ec[i+1] \
+                        - 1.0/8.0*(dy/dx)*eps_bot/eps_si*Ec[i+Nx-1] \
+                        - (dx/dy-1.0/4.0/(dx/dy))*eps_bot/eps_si*Ec[i+Nx] \
+                        - 1.0/8.0*(dy/dx)*eps_bot/eps_si*Ec[i+Nx+1]
                 elif(i >= (Ntotal-Nx) and i < (Ntotal-Nx+Lsda)):
                     F[i] = Ec[i]-Ec[i-Nx]
                 elif(i >= (Ntotal-Nx+Lsda) and i<=(Ntotal-Nx+Lsda+Lg_bota)):
@@ -119,7 +121,7 @@ def poisson(spNd, spFn, Ec_old, F_prime, div_avd, charge_fac, Eg1, Eg2, Es, Ed, 
                 else:
                     F[i] = -(dx/dy)*eps_bot/eps_si*Ec[i-Nx] \
                           - (dy/dx)*eps_bot/eps_si*Ec[i-1] \
-                          + 2*(dx/dy+dy/dx)*eps_bot/eps_si*Ec[i] \
+                          + 2.0*(dx/dy+dy/dx)*eps_bot/eps_si*Ec[i] \
                           - (dy/dx)*eps_bot/eps_si*Ec[i+1] \
                           - (dx/dy)*eps_bot/eps_si*Ec[i+Nx]
 
@@ -151,15 +153,15 @@ def poisson(spNd, spFn, Ec_old, F_prime, div_avd, charge_fac, Eg1, Eg2, Es, Ed, 
                     F[i_l]=2*Ec[i_l]-Ec[i_l+1]-Ec[i_l-Nx]
                     F[i_r]=2*Ec[i_r]-Ec[i_r-1]-Ec[i_r-Nx]
 
-                i_l = 1+j*Nx
-                i_r = (j+1)*Nx
+                i_l = (1+j)*Nx
+                i_r = (j+2)*Nx - 1
 
 
     ##############################END OF EVALUATING F##################################
 
     ###############################EVALUATE MF_prime###################################
     # MF_prime matrix in the silicon film region
-            for j_row in np.arange (Nx*(t_topa+1)/Nx, (Ntotal-Nx*t_bota)/Nx-2):
+            for j_row in np.arange (Nx*(t_topa+1)/Nx, (Ntotal-Nx*t_bota)/Nx-1):
                 for j_col in np.arange(1,Nx-1):
                     ii = j_row*Nx+j_col
                     MF_prime[ii,ii] = dummy_fun_prime[ii]
@@ -179,36 +181,36 @@ def poisson(spNd, spFn, Ec_old, F_prime, div_avd, charge_fac, Eg1, Eg2, Es, Ed, 
                 elif(i >= (Lsda+Lg_topa)+1 and i<Nx):
                     F[i] = Ec[i]-Ec[i+Nx]
                 elif(i >= (Nx*t_topa+1) and i <= Nx*(t_topa+1)):
-                    F[i] = -1/8*(dy/dx)*eps_top/eps_si*Ec[i-Nx-1] \
-                              - (dx/dy-1/4/(dx/dy))*eps_top/eps_si*Ec[i-Nx] \
-                              - 1/8*(dy/dx)*eps_top/eps_si*Ec[i-Nx+1] \
-                              - 3/8*(dy/dx)*(eps_top+eps_si)/eps_si*Ec[i-1] \
-                              + (dx/dy+3/4/(dx/dy))*(eps_top+eps_si)/eps_si*Ec[i] \
+                    F[i] = -1.0/8.0*(dy/dx)*eps_top/eps_si*Ec[i-Nx-1] \
+                              - (dx/dy-1.0/4.0/(dx/dy))*eps_top/eps_si*Ec[i-Nx] \
+                              - 1.0/8.0*(dy/dx)*eps_top/eps_si*Ec[i-Nx+1] \
+                              - 3.0/8.0*(dy/dx)*(eps_top+eps_si)/eps_si*Ec[i-1] \
+                              + (dx/dy+3.0/4.0/(dx/dy))*(eps_top+eps_si)/eps_si*Ec[i] \
                               + dummy_fun[i] \
-                              - 3/8*(dy/dx)*(eps_top+eps_si)/eps_si*Ec[i+1] \
-                              - 1/8*(dy/dx)*Ec[i+Nx-1] \
-                              - (dx/dy-1/4/(dx/dy))*Ec[i+Nx] \
-                              - 1/8*(dy/dx)*Ec[i+Nx+1]
+                              - 3.0/8.0*(dy/dx)*(eps_top+eps_si)/eps_si*Ec[i+1] \
+                              - 1.0/8.0*(dy/dx)*Ec[i+Nx-1] \
+                              - (dx/dy-1.0/4.0/(dx/dy))*Ec[i+Nx] \
+                              - 1.0/8.0*(dy/dx)*Ec[i+Nx+1]
                 else:
                     F[i] = -(dx/dy)*eps_top/eps_si*Ec[i-Nx] \
                             - (dy/dx)*eps_top/eps_si*Ec[i-1] \
-                            + 2*(dx/dy+dy/dx)*eps_top/eps_si*Ec[i]+dummy_fun[i] \
+                            + 2.0*(dx/dy+dy/dx)*eps_top/eps_si*Ec[i]+dummy_fun[i] \
                             - (dy/dx)*eps_top/eps_si*Ec[i+1] \
                             - (dx/dy)*eps_top/eps_si*Ec[i+Nx]
 
         ############################Bottom gate insulator region###########################
             for i in np.arange((Ntotal-Nx*(t_bota+1)),Ntotal):
                 if(i >= (Ntotal-Nx*(t_bota+1)) and i < Ntotal-Nx*t_bota):
-                    F[i] = -1/8*(dy/dx)*Ec[i-Nx-1] \
-                        - (dx/dy-1/4/(dx/dy))*Ec[i-Nx] \
-                        - 1/8*(dy/dx)*Ec[i-Nx+1] \
-                        - 3/8*(dy/dx)*(eps_bot+eps_si)/eps_si*Ec[i-1] \
-                        + (dx/dy+3/4/(dx/dy))*(eps_bot+eps_si)/eps_si*Ec[i] \
+                    F[i] = -1.0/8.0*(dy/dx)*Ec[i-Nx-1] \
+                        - (dx/dy-1.0/4.0/(dx/dy))*Ec[i-Nx] \
+                        - 1.0/8.0*(dy/dx)*Ec[i-Nx+1] \
+                        - 3.0/8.0*(dy/dx)*(eps_bot+eps_si)/eps_si*Ec[i-1] \
+                        + (dx/dy+3.0/4.0/(dx/dy))*(eps_bot+eps_si)/eps_si*Ec[i] \
                         + dummy_fun[i] \
-                        - 3/8*(dy/dx)*(eps_bot+eps_si)/eps_si*Ec[i+1] \
-                        - 1/8*(dy/dx)*eps_bot/eps_si*Ec[i+Nx-1] \
-                        - (dx/dy-1/4/(dx/dy))*eps_bot/eps_si*Ec[i+Nx] \
-                        - 1/8*(dy/dx)*eps_bot/eps_si*Ec[i+Nx+1]
+                        - 3.0/8.0*(dy/dx)*(eps_bot+eps_si)/eps_si*Ec[i+1] \
+                        - 1.0/8.0*(dy/dx)*eps_bot/eps_si*Ec[i+Nx-1] \
+                        - (dx/dy-1.0/4.0/(dx/dy))*eps_bot/eps_si*Ec[i+Nx] \
+                        - 1.0/8.0*(dy/dx)*eps_bot/eps_si*Ec[i+Nx+1]
                 elif(i >= (Ntotal-Nx) and i < (Ntotal-Nx+1+Lsda)-1):
                     F[i] = Ec[i]-Ec[i-Nx]
                 elif(i >= (Ntotal-Nx+Lsda) and i < (Ntotal-Nx+1+Lsda+Lg_bota)):
@@ -218,13 +220,13 @@ def poisson(spNd, spFn, Ec_old, F_prime, div_avd, charge_fac, Eg1, Eg2, Es, Ed, 
                 else:
                     F[i] = -(dx/dy)*eps_bot/eps_si*Ec[i-Nx] \
                         - (dy/dx)*eps_bot/eps_si*Ec[i-1] \
-                        + 2*(dx/dy+dy/dx)*eps_bot/eps_si*Ec[i] + dummy_fun[i] \
+                        + 2.0*(dx/dy+dy/dx)*eps_bot/eps_si*Ec[i] + dummy_fun[i] \
                         - (dy/dx)*eps_bot/eps_si*Ec[i+1] \
                         - (dx/dy)*eps_bot/eps_si*Ec[i+Nx]
 
         ##################Specify the F matrix in the silicon film region#################
             for i in np.arange(Nx*(t_topa+1), (Ntotal-Nx*(t_bota+1)+1)-1):
-                F[i] = -(dx/dy)*Ec[i-Nx]-(dy/dx)*Ec[i-1]+2*(dx/dy+dy/dx)*Ec[i]+dummy_fun[i]-(dy/dx)*Ec[i+1]-(dx/dy)*Ec[i+Nx]
+                F[i] = -(dx/dy)*Ec[i-Nx]-(dy/dx)*Ec[i-1]+2.0*(dx/dy+dy/dx)*Ec[i]+dummy_fun[i]-(dy/dx)*Ec[i+1]-(dx/dy)*Ec[i+Nx]
 
         #***************Modify the F matrix at the right and left boundaries**************
             i_l = 0
@@ -238,11 +240,11 @@ def poisson(spNd, spFn, Ec_old, F_prime, div_avd, charge_fac, Eg1, Eg2, Es, Ed, 
                     F[i_l] = Ec[i_l]-Ec[i_l+1]
                     F[i_r] = Ec[i_r]-Ec[i_r-1]
 
-                elif (j >= round(Nx*(t_topa)/Nx) and j < round(Ntotal-Nx*t_bota/Nx)):
+                elif (j >= round(Nx*(t_topa)/Nx) and j <= round(Ntotal-Nx*t_bota/Nx - 1)):
                     F[i_l] = Ec[i_l]-Ec[i_l+1]
                     F[i_r] = Ec[i_r]-Ec[i_r-1]
 
-                elif (j >= round(Ntotal-Nx*t_bota/Nx) and j<Ny-1):
+                elif (j > round(Ntotal-Nx*t_bota/Nx -1) and j<Ny-1):
                     F[i_l]=Ec[i_l]-Ec[i_l+1]
                     F[i_r]=Ec[i_r]-Ec[i_r-1]
 
@@ -250,8 +252,8 @@ def poisson(spNd, spFn, Ec_old, F_prime, div_avd, charge_fac, Eg1, Eg2, Es, Ed, 
                     F[i_l] = 2*Ec[i_l]-Ec[i_l+1]-Ec[i_l-Nx]
                     F[i_r] = 2*Ec[i_r]-Ec[i_r-1]-Ec[i_r-Nx]
 
-                i_l = 1+j*Nx
-                i_r = (j+1)*Nx
+                i_l = (1+j)*Nx
+                i_r = (j+2)*Nx - 1
 
         ##########################END OF EVALUATING F###################################
 
@@ -270,27 +272,28 @@ def poisson(spNd, spFn, Ec_old, F_prime, div_avd, charge_fac, Eg1, Eg2, Es, Ed, 
         #######################END OF EVALUATING MF_prime##############################
 
         ############################SOLVING FOR delta_Ec###############################
-        delta_Ec = - np.linalg.solve(sparse.csr_matrix(MF_prime), sparse.csr_matrix(F))
+        delta_Ec = - spsolve(sparse.csr_matrix(MF_prime), sparse.csr_matrix(F))
 
         for i in np.arange(0, Ntotal):
-            if abs(delta_Ec(i)) <= 1:
+            if abs(delta_Ec[i]) <= 1:
                 delta_Ec[i] = delta_Ec[i]
-            elif 1<abs(delta_Ec(i)) and abs(delta_Ec(i)) <3.7:
-                delta_Ec[i] = np.sign(delta_Ec(i))*np.power(abs(delta_Ec(i)),0.20)
-            elif abs(delta_Ec(i)) >= 3.7:
+            elif 1<abs(delta_Ec[i]) and abs(delta_Ec[i]) <3.7:
+                delta_Ec[i] = np.sign(delta_Ec[i])*np.power(abs(delta_Ec[i]),0.20)
+            elif abs(delta_Ec[i]) >= 3.7:
                 delta_Ec[i] = np.sign(delta_Ec[i])*np.log(abs(delta_Ec[i]))
         ##########################END OF SOLVING FOR delta_Ec#########################
 
+        Ec = np.reshape(Ec,(1,Ntotal))
         Ec = Ec+delta_Ec
         error_inner = max(abs(np.real(F)))
         print '%s %e \n' % ('error_inner = ', error_inner)
-        max_delta_Ec = max(abs(np.real(delta_Ec.todense())))
+        max_delta_Ec = max(abs(np.real(delta_Ec)))
         MF_prime = np.zeros((Ntotal, Ntotal))
         F = np.zeros((Ntotal, 1))
 
 
     ##########################END OF INNER LOOP (WHILE) #######################
-    return  Ec
+    return Ec
     ###########################################################################
     ###########################END OF FUNCTION POISSON#########################
     ###########################################################################

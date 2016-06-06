@@ -22,56 +22,56 @@ def fprime(Nx, Ny, Ntotal, F_prime):
     ####################Top gate insulator region##############################
     ###########################################################################
     for i_node in np.arange(0, (Nx*(t_topa+1))):
-        if i_node >= 0 and i_node < Lsda:
+        if i_node >= 0 and i_node <= Lsda-1:
             F_prime[i_node, i_node] = 1
             F_prime[i_node, i_node+Nx] = -1
-        elif (i_node >= Lsda and i_node < ((Lsda+Lg_topa)+1)):
+        elif (i_node >= Lsda and i_node <= ((Lsda+Lg_topa))):
             F_prime[i_node, i_node] = 1
-        elif (i_node >= ((Lsda+Lg_topa)+1) and i_node < Nx):
+        elif (i_node >= ((Lsda+Lg_topa)+1) and i_node <= Nx-1):
             F_prime[i_node, i_node] = 1
             F_prime[i_node, i_node+Nx] = -1
-        elif(i_node >= (Nx*t_topa) and i_node < (Nx*(t_topa+1))):
-            F_prime[i_node, i_node-Nx-1] = -eps_top/eps_si*dy/dx/8
+        elif(i_node >= (Nx*t_topa) and i_node <= (Nx*(t_topa+1) - 1)):
+            F_prime[i_node, i_node-Nx-1] = -eps_top/eps_si*dy/dx/8.0
             F_prime[i_node, i_node-Nx] = -eps_top/eps_si*(dx/dy-dy/dx/4)
-            F_prime[i_node, i_node-Nx+1] = -eps_top/eps_si*dy/dx/8
-            F_prime[i_node, i_node-1] = -(eps_top/eps_si+1)*dy/dx*3/8
-            F_prime[i_node, i_node] = (eps_top/eps_si+1)*(dy/dx*3/4+dx/dy)
-            F_prime[i_node, i_node+1] = -(eps_top/eps_si+1)*dy/dx*3/8
-            F_prime[i_node, i_node+Nx-1] = -dy/dx/8
-            F_prime[i_node, i_node+Nx] = -(dx/dy-dy/dx/4)
-            F_prime[i_node, i_node+Nx+1] = -dy/dx/8
+            F_prime[i_node, i_node-Nx+1] = -eps_top/eps_si*dy/dx/8.0
+            F_prime[i_node, i_node-1] = -(eps_top/eps_si+1)*dy/dx*3.0/8.0
+            F_prime[i_node, i_node] = (eps_top/eps_si+1)*(dy/dx*3.0/4.0+dx/dy)
+            F_prime[i_node, i_node+1] = -(eps_top/eps_si+1)*dy/dx*3.0/8.0
+            F_prime[i_node, i_node+Nx-1] = -dy/dx/8.0
+            F_prime[i_node, i_node+Nx] = -(dx/dy-dy/dx/4.0)
+            F_prime[i_node, i_node+Nx+1] = -dy/dx/8.0
         else:
             F_prime[i_node, i_node-Nx] = -eps_top/eps_si*dx/dy
             F_prime[i_node, i_node-1] = -eps_top/eps_si*dy/dx
-            F_prime[i_node, i_node] = 2*(dy/dx+dx/dy)*eps_top/eps_si
+            F_prime[i_node, i_node] = 2.0*(dy/dx+dx/dy)*eps_top/eps_si
             F_prime[i_node, i_node+1] = -eps_top/eps_si*dy/dx
             F_prime[i_node, i_node+Nx] = -eps_top/eps_si*dx/dy
 
     # Bottom gate insulator region
     ###########################
     for i_node in np.arange((Ntotal-Nx*(t_bota+1)), Ntotal):
-        if(i_node >= (Ntotal-Nx*(t_bota+1)) and i_node < (Ntotal-Nx*t_bota)):
-            F_prime[i_node, i_node-Nx-1] = -dy/dx/8
-            F_prime[i_node, i_node-Nx] = -(dx/dy-dy/dx/4)
-            F_prime[i_node, i_node-Nx+1] = -dy/dx/8
-            F_prime[i_node, i_node-1] = -(eps_bot/eps_si+1)*dy/dx*3/8
-            F_prime[i_node, i_node] = (eps_bot/eps_si+1)*(dy/dx*3/4+dx/dy)
-            F_prime[i_node, i_node+1] = -(eps_bot/eps_si+1)*dy/dx*3/8
-            F_prime[i_node, i_node+Nx-1] = -eps_bot/eps_si*dy/dx/8
-            F_prime[i_node, i_node+Nx] = -eps_bot/eps_si*(dx/dy-dy/dx/4)
-            F_prime[i_node, i_node+Nx+1] = -eps_bot/eps_si*dy/dx/8
-        elif(i_node >= (Ntotal-Nx) and i_node < (Ntotal-Nx+Lsda)):
+        if(i_node >= (Ntotal-Nx*(t_bota+1)) and i_node <= (Ntotal-Nx*t_bota -1)):
+            F_prime[i_node, i_node-Nx-1] = -dy/dx/8.0
+            F_prime[i_node, i_node-Nx] = -(dx/dy-dy/dx/4.0)
+            F_prime[i_node, i_node-Nx+1] = -dy/dx/8.0
+            F_prime[i_node, i_node-1] = -(eps_bot/eps_si+1)*dy/dx*3.0/8.0
+            F_prime[i_node, i_node] = (eps_bot/eps_si+1)*(dy/dx*3.0/4.0+dx/dy)
+            F_prime[i_node, i_node+1] = -(eps_bot/eps_si+1)*dy/dx*3.0/8.0
+            F_prime[i_node, i_node+Nx-1] = -eps_bot/eps_si*dy/dx/8.0
+            F_prime[i_node, i_node+Nx] = -eps_bot/eps_si*(dx/dy-dy/dx/4.0)
+            F_prime[i_node, i_node+Nx+1] = -eps_bot/eps_si*dy/dx/8.0
+        elif(i_node >= (Ntotal-Nx) and i_node <= (Ntotal-Nx+Lsda -1)):
             F_prime[i_node, i_node] = 1
             F_prime[i_node, i_node-Nx] = -1
-        elif(i_node >=  (Ntotal-Nx+Lsda) and i_node < (Ntotal-Nx+1+Lsda+Lg_bota)):
+        elif(i_node >=  (Ntotal-Nx+Lsda) and i_node <= (Ntotal-Nx+Lsda+Lg_bota)):
             F_prime[i_node, i_node] = 1
-        elif(i_node >= (Ntotal-Nx+1+Lsda+Lg_bota) and i_node < Ntotal):
+        elif(i_node >= (Ntotal-Nx+1+Lsda+Lg_bota) and i_node <= Ntotal -1):
             F_prime[i_node, i_node] =1
             F_prime[i_node, i_node-Nx] = -1
         else:
             F_prime[i_node, i_node-Nx] = -eps_bot/eps_si*dx/dy
             F_prime[i_node, i_node-1] = -eps_bot/eps_si*dy/dx
-            F_prime[i_node, i_node] = 2*(dx/dy+dy/dx)*eps_bot/eps_si
+            F_prime[i_node, i_node] = 2.0*(dx/dy+dy/dx)*eps_bot/eps_si
             F_prime[i_node, i_node+1] = -eps_bot/eps_si*dy/dx
             F_prime[i_node, i_node+Nx] = -eps_bot/eps_si*dx/dy
 
@@ -81,7 +81,7 @@ def fprime(Nx, Ny, Ntotal, F_prime):
     for i_node in np.arange((Nx*(t_topa+1)), (Ntotal-Nx*(t_bota+1))):
         F_prime[i_node, i_node-Nx] = -dx/dy
         F_prime[i_node, i_node-1] = -dy/dx
-        F_prime[i_node, i_node] = 2*(dx/dy+dy/dx)
+        F_prime[i_node, i_node] = 2.0*(dx/dy+dy/dx)
         F_prime[i_node, i_node+1] = -dy/dx
         F_prime[i_node, i_node+Nx] = -dx/dy
 
@@ -107,14 +107,14 @@ def fprime(Nx, Ny, Ntotal, F_prime):
             F_prime[i_node_r, :] = 0
             F_prime[i_node_r, i_node_r] = 1
             F_prime[i_node_r, i_node_r-1] = -1
-        elif(iii >= round((Nx*(t_topa))/Nx) and iii < round((Ntotal-Nx*t_bota)/Nx)):
+        elif(iii >= round((Nx*(t_topa))/Nx) and iii <= round((Ntotal-Nx*t_bota)/Nx - 1)):
             F_prime[i_node_l, :] = 0
             F_prime[i_node_l, i_node_l] = 1
             F_prime[i_node_l, i_node_l+1] = -1
             F_prime[i_node_r, :] = 0
             F_prime[i_node_r, i_node_r] = 1
             F_prime[i_node_r, i_node_r-1] = -1
-        elif(iii >= round((Ntotal-Nx*t_bota)/Nx) and iii<Ny):
+        elif(iii > round((Ntotal-Nx*t_bota)/Nx - 1) and iii<Ny -1):
             F_prime[i_node_l, :] = 0
             F_prime[i_node_l, i_node_l] = 1
             F_prime[i_node_l, i_node_l+1] = -1
@@ -131,8 +131,8 @@ def fprime(Nx, Ny, Ntotal, F_prime):
             F_prime[i_node_r, i_node_r-1] = -1
             F_prime[i_node_r, i_node_r-Nx] = -1
 
-        i_node_l = 1+iii*Nx
-        i_node_r = (1+iii)*Nx
+        i_node_l = (1+iii)*Nx
+        i_node_r = (2+iii)*Nx - 1
 
     #####################################################
     #	END OF SPECIFYING F_prime

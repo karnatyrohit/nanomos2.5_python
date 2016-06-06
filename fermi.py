@@ -7,7 +7,7 @@ import numpy as np
 
 
 def fermi(x, fermi_flag, fermi_order):
-    if fermi_order == 1/2:
+    if fermi_order == 1.0/2.0:
         if fermi_flag == 1:
             exp_fac = np.exp(-0.17*(x+1.0)**2)
             nu = x**4+50.0+33.6*x*(1.0-0.68*exp_fac)
@@ -22,13 +22,13 @@ def fermi(x, fermi_flag, fermi_order):
         elif fermi_flag == 0:
             y = np.exp(x)
 
-    elif fermi_order == -1/2:
+    elif fermi_order == -1.0/2.0:
         if fermi_flag == 1:
             exp_fac = np.exp(-0.17*(x+1.0)**2)
             nu = x**4+50.0+33.6*x*(1.0-0.68*exp_fac)
             zeta = 3.0*np.sqrt(np.pi)/(4.0*nu**0.375)
-            nu_prime = 4*x**3+33.6-22.848*exp_fac**(1-0.34*(x+x**2))
-            zeta_prime = -(9*np.sqrt(np.pi)/32)*nu**(-11/8)*nu_prime
+            nu_prime = 4.0*x**3+33.6-22.848*exp_fac*(1-0.34*(x+x**2))
+            zeta_prime = -(9.0*np.sqrt(np.pi)/32.0)*nu**(-11.0/8.0)*nu_prime
             y = (np.exp(-x)-zeta_prime)/(np.exp(-x)+zeta)**2
         elif fermi_flag == 0:
             y = np.exp(x)

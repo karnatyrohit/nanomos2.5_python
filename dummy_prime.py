@@ -13,7 +13,7 @@ def dummy_prime(x, dummy_flag, fermi_flag):
             y = np.exp(x)
         elif fermi_flag == 1:
             y = 1/(1 + np.exp(-x))
-    elif dummy_flag == 1/2:
-        y = fermi(x, fermi_flag, -1/2)
+    elif dummy_flag == 1.0/2.0:
+        y = fermi(x, fermi_flag, -1.0/2.0)
 
     return y

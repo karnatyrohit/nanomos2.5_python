@@ -8,6 +8,7 @@ from schred import schred
 from fermi import fermi
 from integral import integral
 from anti_dummy import anti_dummy
+from scipy import sparse
 
 
 def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junction_l, junction_r, div_avd):
@@ -28,8 +29,8 @@ def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junct
     eta = 1e-6j
     Ef_tail_low = 0.01
     Ef_tail_up = 0.3
-    E_step = criterion_outer/2 #0.5 times criterion_outer
-    zeta_self = -(25*120/(mu_low*1e4))*1.0e-3j #eV
+    E_step = criterion_outer/2.0 #0.5 times criterion_outer
+    zeta_self = -(25.0*120.0/(mu_low*1e4))*1.0e-3j #eV
     decay_fac = 1 #dimensionless
     ########################MODEL 3 related parameters############################
     ########################MODEL 2 related parameters############################
@@ -64,8 +65,10 @@ def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junct
     #############################################################################
 
     #########################INITIALIZATION######################################
-    Ec_old = np.real(Ec_old) #1 column of Ntotal elements
-    Ne_old = np.real(Ne_old) #1 column of Ntotal elements
+    Ec_old = np.real(Ec_old.todense())#1 column of Ntotal elements
+    Ec_old = sparse.csr_matrix(Ec_old)
+    Ne_old = np.real(Ne_old.todense()) #1 column of Ntotal elements
+    #Ne_old = sparse.csr_matrix(Ne_old)
     #Ne_sub_old = zeros(Nx,max_subband,t_vall)
     #E_sub_old = zeros(Nx,max_subband,t_vall)
 
@@ -85,8 +88,9 @@ def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junct
     elif ox_pnt_flag == 1:
         Np_v = Ny
 
-    Fn = np.zeros(Nx, 1)
-    Ns = np.zeros(Nx, 1)
+
+    Fn = np.zeros((Nx, 1))
+    Ns = np.zeros((Nx, 1))
     N_body = np.zeros((Np_v, Nx))
     N_body_sum = np.zeros((Np_v, Nx))
     U_sub = np.zeros((t_vall, Nx, max_subband))
@@ -98,14 +102,16 @@ def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junct
     ############################################################################
 
     ############################################################################
-    if transport_model==1: # TRANSPORT MODEL 1####################################
+    if transport_model == 1:  # TRANSPORT MODEL 1####################################
     ############################################################################
     # INITIALIZE THE REAL FERMI ENERGY LEVEL AND COMPUTE
-        N_row_mid = round((Ntotal-Nx*(t_topa+t_bota+1))/Nx/2)-1
+        N_row_mid = round((Ntotal-Nx*(t_topa+t_bota+1))/Nx/2.0)-1
         Nc_start = (Nx*(t_topa+1))+N_row_mid*Nx
         Nc_end=(Nx*(t_topa+1))+(N_row_mid+1)*Nx
         U_bias = Ec_old[Nc_start:Nc_end]
-        Ez = (h_bar*np.pi/t_si)^2/(2*mz(1)*m_e)/q
+        Ez = (h_bar*np.pi/t_si)**2.0/(2.0*mz[0]*m_e)/q
+
+
 
         channel_s = junction_l
         channel_e = junction_r
@@ -115,7 +121,7 @@ def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junct
             if i_node < channel_s:
                 Fn[i_node] = -Vs-Ez
             elif i_node >= channel_e - 1:
-                Fn[i_node]=-Vd-Ez
+                Fn[i_node] = -Vd-Ez
             else:
                 Fn[i_node] = -Vs-Ez+(i_node-channel_s + 1)*Fn_slope
             if fermi_flag == 1:
@@ -123,10 +129,13 @@ def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junct
             elif fermi_flag == 0:
                 Ns[i_node] = Ncc*np.exp((Fn[i_node]-U_bias[i_node])/(k_B*Temp/q))
 
-        for iii_row in np.arange((Nx*(t_topa+1))/Nx, (Ntotal-Nx*t_bota)/Nx-2):
+
+
+
+        for iii_row in np.arange((Nx*(t_topa+1))/Nx, (Ntotal-Nx*t_bota)/Nx-1):
             for iii_col in np.arange(0, Nx):
                 i_node = iii_row*Nx+iii_col
-                Ne_new[i_node] = (np.sin((iii_row+1-(Nx*(t_topa+1))/Nx) * dy/t_si*np.pi)**2) * Ns[iii_col]*2/t_si
+                Ne_new[i_node] = (np.sin((iii_row+1-(Nx*(t_topa+1))/Nx) * dy/t_si*np.pi)**2) * Ns[iii_col]*2.0/t_si
 
 
    ################################################################################
@@ -137,8 +146,8 @@ def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junct
         E_sub = U_sub
 
         for i_val in np.arange(0, t_vall):
-            Ne_2d_1 = 2*(np.sqrt(mx[i_val]*my[i_val])*m_e*k_B*Temp)/(2*np.pi*h_bar**2)
-            Ne_2d_2 = Ne_2d_1*2/np.pi**0.5
+            Ne_2d_1 = 2*(np.sqrt(mx[i_val]*my[i_val])*m_e*k_B*Temp)/(2.0*np.pi*h_bar**2)
+            Ne_2d_2 = Ne_2d_1*2.0/np.pi**0.5
 
             for i_sub in np.arange(0,max_subband):
                 U_bias = U_sub[i_val, :, i_sub]
@@ -158,7 +167,12 @@ def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junct
                 N_body_sum = N_body_sum+N_body
 
         if ox_pnt_flag == 0:
-            Ne_new = np.array([Ne_old[0:(Nx*(t_topa+1))], [np.reshape((N_body_sum[1:Np_v-1,:]).transpose(),(1,Nx*(Np_v-2))).transpose()], [Ne_old[(Ntotal-Nx*(t_bota+1)):Ntotal]]])
+            #Ne_new = np.array([Ne_old[0:(Nx*(t_topa+1))], [np.reshape((N_body_sum[1:Np_v-1,:]).transpose(),(1,Nx*(Np_v-2))).transpose()], [Ne_old[(Ntotal-Nx*(t_bota+1)):Ntotal]]])
+            #Ne_old = Ne_old.toarray()
+            Ne_new[0:Nx*(t_topa+1)] = Ne_old[0:Nx*(t_topa+1)]
+            Ne_new[Nx*(t_topa+1):Nx*(t_topa+t_sia)] = np.reshape((N_body_sum[1:Np_v-1,:]),(1,Nx*(Np_v-2))).transpose()
+            Ne_new[Nx*(t_topa+t_sia):Ntotal] = Ne_old[(Ntotal-Nx*(t_bota+1)):Ntotal]
+            Ne_new = np.reshape(Ne_new,(Ntotal,1))
         elif ox_pnt_flag == 1:
             Ne_new = np.reshape(N_body_sum.transpose(), (1, Ntotal)).transpose()
 
@@ -167,9 +181,9 @@ def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junct
     ################################################################################
 
     if ox_pnt_flag == 0: # No electron penetration into oxide
-        for iii_row in np.arange ((Nx*(t_topa+1))/Nx,(Ntotal-Nx*t_bota)/Nx-2):
-            for iii_col in np.arange(0,Nx):
-                i_node=iii_row*Nx+iii_col
+        for iii_row in np.arange((Nx*(t_topa+1))/Nx, (Ntotal-Nx*t_bota)/Nx-1):
+            for iii_col in np.arange(0, Nx):
+                i_node = iii_row*Nx+iii_col
                 Fn_new[i_node] = anti_dummy(Ne_new[i_node]/Nc,dummy_flag,fermi_flag)*(k_B*Temp/q)+Ec_old[i_node]
     elif ox_pnt_flag == 1: # assuming electron penetration into oxide
         Fn_new = anti_dummy((Ne_new+div_avd)/Nc, dummy_flag, fermi_flag)*(k_B*Temp/q)+Ec_old

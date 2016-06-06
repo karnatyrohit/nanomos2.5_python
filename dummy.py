@@ -18,7 +18,7 @@ def dummy(x, dummy_flag, fermi_flag):
         elif fermi_flag == 1:
             y = np.log(1+np.exp(x))
 
-    elif dummy_flag == 1/2:
-        y = fermi(x, fermi_flag, 1/2)
+    elif dummy_flag == 1.0/2.0:
+        y = fermi(x, fermi_flag, 1.0/2.0)
 
     return y

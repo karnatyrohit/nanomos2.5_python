@@ -354,4 +354,4 @@ def main():
             Ec_3d[ii_vd, :, ii_vg] = np.reshape(Ec_new, Ntotal)
             conv[ii_vg, ii_vd] = converge
 
-    return [Ie, Ie_sub_body, Te_sub_body, Ne_sub_body, E_sub_body, Ne_3d, Ec_3d, conv]
+    return [Ie, Ie_sub_body, Te_sub_body, Ne_sub_body, E_sub_body, Ne_3d, Ec_3d, conv, Vd_temp]

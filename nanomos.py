@@ -2,9 +2,8 @@
 ################### NANOMOS 2.0 ########################################
 ########################################################################
 
-import time
 from main import main
-#from saveoutput import saveoutput
+from saveoutput import saveoutput
 from readinput import *
 
 print '*******************nanoMOS2.0**********************'
@@ -14,8 +13,8 @@ print '*******************nanoMOS2.0**********************'
 ###########################################################################
 # main
 ###########################################################################
-initial_time = time.time() # time the program total execution time
-[Ie, Ie_sub, Te_sub, Ne_sub, E_sub, Ne, Ec, conv] = main()
+initial_time = time.time()  # time the program total execution time
+[Ie, Ie_sub, Te_sub, Ne_sub, E_sub, Ne, Ec, conv, Vd_temp] = main()
 total_time = time.time()-initial_time  # obtain total execution time
 print "Total computation time was %d seconds.\n" % total_time
 
@@ -23,7 +22,7 @@ print "Total computation time was %d seconds.\n" % total_time
 #########################SAVE AND PLOT OUTPUT############################
 #########################################################################
 
-#saveoutput(Ec, Ne, Ie, Ne_sub, E_sub, Te_sub, conv)
+saveoutput(Ec, Ne, Ie, Ne_sub, E_sub, Te_sub, conv, Vd_temp)
 
 #########################################################################
 ######################## THE END OF NANOMOS #############################

@@ -5,6 +5,7 @@
 import time
 import sys
 import numpy as np
+from parser import parser
 
 # DEVICE DIRECTIVE
 Nsd = 2e20; Nbody = 0; Lg_top = 9; Lg_bot = 9; Lsd = 10
@@ -12,8 +13,6 @@ overlap_s = -4; overlap_d = -4
 dopslope_s=1; dopslope_d=1
 t_si = 3; t_top = 1.0; t_bot = 1.0; Te = 300  #tsi, tox_top,tox_bot, temp
 
-
-#
 
 # GRID DIRECTIVE
 dx=0.3; dy=0.1; refine=1.0
@@ -50,6 +49,520 @@ ox_pnt_flag = 0
 # PLOTTING CAPABILITES - yes =1. no =0
 plot_IV = 1; plot_Ec3d = 0; plot_Ne3d = 0; plot_Ec_sub = 0; plot_Nesub = 0
 plot_Te = 0; plot_Ec_IV = 0; plot_Ne_IV = 0
+
+filename = raw_input('Enter filename to be run')
+#dirname = input('Enter name output directory')
+
+
+class p:
+    err = 1
+    ncard = ''
+    nvar = 0
+    var = []
+
+fin = open(filename, 'r')
+
+while p.err != -1:
+    parser(fin, p)
+
+    if p.err == 1 or p.err == 999:
+
+        if p.ncard == 'device':
+            for i in np.arange(0,p.nvar):
+                if p.var[i].name == 'nsd':
+                    if p.var[i].type == 'number':
+                        Nsd = p.var[i].val
+                    else:
+                        print 'Invalid assignment for nsd'
+                        exit()
+
+                elif p.var[i].name == 'nbody':
+                    if p.var[i].type == 'number':
+                        Nbody = p.var[i].val
+                    else:
+                        print 'Invalid assignment for nbody'
+                        exit()
+
+                elif p.var[i].name == 'lgtop':
+                    if p.var[i].type == 'number':
+                        Lg_top = p.var[i].val
+                    else:
+                        print 'Invalid assignment for lgtop'
+                        exit()
+
+                elif p.var[i].name == 'lgbot':
+                    if p.var[i].type == 'number':
+                        Lg_bot = p.var[i].val
+                    else:
+                        print 'Invalid assignment for lgbot'
+                        exit()
+
+                elif p.var[i].name == 'lsd':
+                    if p.var[i].type == 'number':
+                        Lsd=p.var[i].val
+                    else:
+                        print 'Invalid assignment for lsd'
+                    exit()
+
+                elif p.var[i].name == 'overlap_s':
+                    if p.var[i].type == 'number':
+                        overlap_s=p.var[i].val
+                    else:
+                        print 'Invalid assignment for overlap_s'
+                    exit()
+
+                elif p.var[i].name == 'overlap_d':
+                    if p.var[i].type == 'number':
+                        overlap_d=p.var[i].val
+                    else:
+                        print 'Invalid assignment for overlap_d'
+                        exit()
+
+                elif p.var[i].name == 'dopslope_s':
+                    if p.var[i].type == 'number':
+                        dopslope_s=p.var[i].val
+                    else:
+                        print 'Invalid assignment for dopslope_s'
+                        exit()
+
+                elif p.var[i].name == 'dopslope_d':
+                    if p.var[i].type == 'number':
+                        dopslope_d=p.var[i].val
+                    else:
+                        print 'Invalid assignment for dopslope_d'
+                        exit()
+
+                elif p.var[i].name == 'tsi':
+                    if p.var[i].type == 'number':
+                        t_si=p.var[i].val
+                    else:
+                        print 'Invalid assignment for tsi'
+                        exit()
+
+                elif p.var[i].name == 'tox_top':
+                    if p.var[i].type == 'number':
+                        t_top=p.var[i].val
+                    else:
+                        print 'Invalid assignment for tox_top'
+                        exit()
+
+                elif p.var[i].name == 'tox_bot':
+                    if p.var[i].type == 'number':
+                        t_bot=p.var[i].val
+                    else:
+                        print 'Invalid assignment for tox_bot'
+                        exit()
+
+                elif p.var[i].name == 'temp':
+                    if p.var[i].type == 'number':
+                        Te=p.var[i].val
+                    else:
+                        print 'Invalid assignment for temp'
+                        exit()
+
+        elif p.ncard == 'grid':
+            for i in np.arange(0,p.nvar):
+                if p.var[i].name == 'dx':
+                    if p.var[i].type == 'number':
+                        dx=p.var[i].val
+                    else:
+                        print 'Invalid assignment for dx'
+                        exit()
+
+                elif p.var[i].name == 'dy':
+                    if p.var[i].type == 'number':
+                        dy=p.var[i].val
+                    else:
+                        print 'Invalid assignment for dy'
+                        exit()
+
+                elif p.var[i].name == 'refine':
+                    if p.var[i].type == 'number':
+                        refine=p.var[i].val
+                    else:
+                        print 'Invalid assignment for refine'
+                        exit()
+
+        elif p.ncard == 'transport':
+            for i in np.arange(0,p.nvar):
+                if p.var[i].name == 'model':
+                    if p.var[i].type == 'string':
+                        if p.var[i].val == 'dd':
+                            transport_model1 = 2
+                        elif p.var[i].val =='clbte':
+                            transport_model1 = 3
+                        elif p.var[i].val == 'qbte':
+                            transport_model1 = 4
+                        elif p.var[i].val == 'qdte':
+                            transport_model1 = 5
+                        elif p.var[i].val =='et':
+                            transport_model1 = 6
+                        else:
+                            print '****** ERROR !!! MODEL CAN ONLY BE DD/CLBTE/QBTE/ET/QDTE *******'
+                            exit()
+
+                    else:
+                        print 'Invalid assignment for model'
+                        exit()
+
+                elif p.var[i].name == 'mu_low':
+                    if p.var[i].type == 'number':
+                        mu_low = p.var[i].val
+                    else:
+                        print 'Invalid assignment for mu_low'
+                        exit()
+
+                elif p.var[i].name == 'beta':
+                    if p.var[i].type == 'number':
+                        beta=p.var[i].val
+                    else:
+                        print 'Invalid assignment for beta'
+                        exit()
+
+                elif p.var[i].name == 'vsat':
+                    if p.var[i].type == 'number':
+                        Vel_sat=p.var[i].val
+                    else:
+                        print 'Invalid assignment for vsat'
+                        exit()
+
+                elif p.var[i].name == 'ELE_TAUW':
+                    if p.var[i].type == 'number':
+                        ELE_TAUW=p.var[i].val
+                    else:
+                        print 'Invalid assignment for ELE_TAUW'
+                        exit()
+
+                elif p.var[i].name == 'ELE_CQ':
+                    if p.var[i].type == 'number':
+                        ELE_CQ=p.var[i].val
+                    else:
+                        print 'Invalid assignment for ELE_CQ'
+                        exit()
+
+        elif p.ncard =='bias':
+            for i in np.arange(0,p.nvar):
+                if p.var[i].name == 'vgtop':
+                    if p.var[i].type == 'number':
+                        Vg1=p.var[i].val
+                    else:
+                        print 'Invalid assignment for vgtop'
+                        exit()
+
+                elif p.var[i].name == 'vgbot':
+                    if p.var[i].type == 'number':
+                        Vg2=p.var[i].val
+                    else:
+                        print 'Invalid assignment for vgbot'
+                        exit()
+
+                elif p.var[i].name == 'vs':
+                    if p.var[i].type == 'number':
+                        Vs=p.var[i].val
+                    else:
+                        print 'Invalid assignment for vs'
+                        exit()
+
+                elif p.var[i].name == 'vd':
+                    if p.var[i].type == 'number':
+                        Vdi=p.var[i].val
+                    else:
+                        print 'Invalid assignment for vd'
+                        exit()
+
+                elif p.var[i].name == 'vgstep':
+                    if p.var[i].type == 'number':
+                        Vg_step=p.var[i].val
+                    else:
+                        print 'Invalid assignment for vgstep'
+                        exit()
+
+                elif p.var[i].name == 'vdstep':
+                    if p.var[i].type == 'number':
+                        Vd_step=p.var[i].val
+                    else:
+                        print 'Invalid assignment for vdstep'
+                        exit()
+
+                elif p.var[i].name == 'ngstep':
+                    if p.var[i].type == 'number':
+                        Ng_step=p.var[i].val
+                    else:
+                        print 'Invalid assignment for ngstep'
+                        exit()
+
+                elif p.var[i].name == 'ndstep':
+                    if p.var[i].type == 'number':
+                        Nd_step=p.var[i].val
+                    else:
+                        print 'Invalid assignment for ndstep'
+                        exit()
+
+                elif p.var[i].name == 'vd_initial':
+                    if p.var[i].type == 'number':
+                        Vd_initial=p.var[i].val
+                    else:
+                        print 'Invalid assignment for vd_initial'
+                exit()
+
+
+
+
+        elif p.ncard == 'material':
+            for i in np.arange(0,p.nvar):
+                if p.var[i].name == 'wfunc_top':
+                    if p.var[i].type == 'number':
+                        phi_top =p.var[i].val
+                    else:
+                        print 'Invalid assignment for wfunc_top'
+                        exit()
+
+                elif p.var[i].name == 'wfunc_bot':
+                    if p.var[i].type == 'number':
+                        phi_bot=p.var[i].val
+                    else:
+                        print 'Invalid assignment for wfunc_bot'
+                        exit()
+
+                elif p.var[i].name == 'mlong':
+                    if p.var[i].type == 'number':
+                        m_l=p.var[i].val
+                    else:
+                        print 'Invalid assignment for mlong'
+                        exit()
+
+                elif p.var[i].name == 'mtran':
+                    if p.var[i].type == 'number':
+                        m_t=p.var[i].val
+                    else:
+                        print 'Invalid assignment for mtran'
+                        exit()
+
+                elif p.var[i].name == 'kox_top':
+                    if p.var[i].type == 'number':
+                        eps_top=p.var[i].val
+                    else:
+                        print 'Invalid assignment for kox_top'
+                        exit()
+
+                elif p.var[i].name == 'kox_bot':
+                    if p.var[i].type == 'number':
+                        eps_bot=p.var[i].val
+                    else:
+                        print 'Invalid assignment for kox_bot'
+                        exit()
+
+                elif p.var[i].name == 'dec_top':
+                    if p.var[i].type == 'number':
+                        bar_top=p.var[i].val
+                    else:
+                        print 'Invalid assignment for dec_top'
+                        exit()
+
+                elif p.var[i].name == 'dec_bot':
+                    if p.var[i].type == 'number':
+                        bar_bot=p.var[i].val
+                    else:
+                        print 'Invalid assignment for dec_bot'
+                        exit()
+
+                elif p.var[i].name == 'ksi':
+                    if p.var[i].type == 'number':
+                        eps_si=p.var[i].val
+                    else:
+                        print 'Invalid assignment for ksi'
+                exit()
+
+
+
+
+        elif p.ncard == 'solve':
+            for i in np.arange(0,p.nvar):
+                if p.var[i].name == 'dvmax':
+                    if p.var[i].type == 'number':
+                        criterion_outer=p.var[i].val
+                    else:
+                        print 'Invalid assignment for dvmax'
+                        exit()
+
+
+                if p.var[i].name == 'dvpois':
+                    if p.var[i].type == 'number':
+                        criterion_inner=p.var[i].val
+                    else:
+                        print 'Invalid assignment for dvmax'
+                        exit()
+
+
+
+#*****************************************************************************
+        elif p.ncard == 'plots':
+            for i in np.arange(0,p.nvar):
+                #Iv plot
+                if p.var[i].name == 'I_V':
+                    if p.var[i].type == 'string':
+                        if p.var[i].val == 'y':
+                            plot_IV=1
+                        else:
+                            plot_IV=0
+
+                    else:
+                        print 'Invalid assignment for I_V'
+                        exit()
+
+
+                #Ec plot
+            if p.var[i].name == 'Ec3d':
+                if p.var[i].type == 'string':
+                    if p.var[i].val == 'y':
+                        plot_Ec3d=1
+                    else:
+                        plot_Ec3d=0
+
+                else:
+                    print 'Invalid assignment for Ec'
+                    exit()
+
+
+                #Ne plot
+            if p.var[i].name == 'Ne3d':
+                if p.var[i].type == 'string':
+                    if p.var[i].val =='y':
+                        plot_Ne3d=1
+                    else:
+                        plot_Ne3d=0
+
+                else:
+                    print 'Invalid assignment for Ne'
+                    exit()
+
+
+                #Ec_sub plot
+            if p.var[i].name == 'Ec_sub':
+                if p.var[i].type == 'string':
+                    if p.var[i].val == 'y':
+                        plot_Ecsub=1
+                    else:
+                        plot_Ecsub=0
+
+                else:
+                    print 'Invalid assignment for Ecsub'
+                    exit()
+
+
+                #Ne_sub plot
+            if p.var[i].name == 'Ne_sub':
+                if p.var[i].type == 'string':
+                    if p.var[i].val == 'y':
+                        plot_Nesub=1
+                    else:
+                        plot_Nesub=0
+
+                else:
+                    print 'Invalid assignment for Ne_sub'
+                    exit()
+
+
+                #Te plot
+            if p.var[i].name == 'Te':
+                if p.var[i].type == 'string':
+                    if p.var[i].val == 'y':
+                        plot_Te=1
+                    else:
+                        plot_Te=0
+
+                else:
+                    print 'Invalid assignment for Te'
+                    exit()
+
+
+                #Ec_IV plot
+            if p.var[i].name == 'Ec_IV':
+                if p.var[i].type == 'string':
+                    if p.var[i].val == 'y':
+                        plot_Ec_IV=1
+                    else:
+                        plot_Ec_IV=0
+
+                else:
+                    print 'Invalid assignment for Ec_IV'
+                    exit()
+
+
+                #Ne_IV plot
+            if p.var[i].name == 'Ne_IV':
+                if p.var[i].type == 'string':
+                    if p.var[i].val == 'y':
+                        plot_Ne_IV=1
+                    else:
+                        plot_Ne_IV=0
+
+                else:
+                    print 'Invalid assignment for Ne_IV'
+                    exit()
+
+
+
+#*****************************************************************************
+        elif p.ncard == 'options':
+            for i in np.arange(0,p.nvar):
+                if p.var[i].name == 'valleys':
+                    if p.var[i].type == 'string':
+                        if p.var[i].val == 'unprimed':
+                            t_vall=1
+                        else:
+                            t_vall=3
+
+                    else:
+                        print 'Invalid assignment for valleys'
+                        exit()
+
+                elif p.var[i].name == 'num_subbands':
+                    if p.var[i].type == 'number':
+                        max_subband=p.var[i].val
+                    else:
+                        print 'Invalid assignment for num_subbands'
+                        exit()
+
+                elif p.var[i].name == 'dg':
+                    if p.var[i].type == 'number':
+                        DG_flag=p.var[i].val
+                    else:
+                        print 'Invalid assignment for dg'
+                        exit()
+
+                elif p.var[i].name == 'fermi':
+                    if p.var[i].type == 'number':
+                        fermiflag = p.var[i].val
+                    else:
+                        print 'Invalid assignment for fermi'
+                        exit()
+
+                elif p.var[i].name == 'ox_penetrate':
+                    if p.var[i].type == 'number':
+                        ox_pnt_flag=p.var[i].val
+                    else:
+                        print 'Invalid assignment for ox_penetrate'
+                        exit()
+
+fin.close()
+p.err=1
+
+if transport_model1 != 3:
+        if (Vg1>1 or Vg2>1 or Vs>1 or Vdi>1):
+            print 'Too High of Voltage'
+            exit()
+
+#if (Nd_step>0&Ng_step>0)
+#    dump='Only one voltage sweep can be defined'
+#    return
+
+
+if (Ng_step>20 or Nd_step>20):
+    print 'More than 20 bias points specified'
+    exit()
+
+
 
 #physics constants
 eps_o = 8.85e-12
@@ -109,6 +622,7 @@ elif transport_model1 == 'et':
 else:
     print '****** ERROR !!! MODEL CAN ONLY BE DD/CLBTE/QBTE/ET/QDTE *******'
 ######################################################################
+
 
 class transportmodel:
     value = transport_model1

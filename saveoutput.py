@@ -30,9 +30,6 @@ def saveoutput(Ec,Ne,Ie,Ne_sub,E_sub,Te_sub,converge,Vd_temp):
     ###########################################################
     #       POST PROCESSING
     ###########################################################
-    print Ec.shape
-    print Ng_step
-    print Nd_step
     MEc = np.reshape(Ec[Nd_step, :, Ng_step], (Ny, Nx)).transpose()
     trMEc = MEc.transpose()
     MNe = np.reshape(Ne[Nd_step, :, Ng_step], (Ny, Nx)).transpose()

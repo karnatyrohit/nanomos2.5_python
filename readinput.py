@@ -86,23 +86,13 @@ class P:
 p = P()
 
 fin = open(filename, 'r')
-t= 0
 
 while p.err != -1:
-    print p.ncard
-    if np.size(p.var):
-        print p.var[1].val
     p.ncard = ''
     p.nvar = 0
     p.var = []
     #p.reset()
-    print p.ncard
-    if np.size(p.var):
-        print p.var[1].val
     parser(fin, p)
-    print 'b'
-    print p.errmess
-    t=1
 
     if p.err == 1 or p.err == 999:
         if p.ncard == 'device':
@@ -222,11 +212,9 @@ while p.err != -1:
                         exit()
 
         elif p.ncard == 'transport':
-            print 'a'
             for i in np.arange(0,p.nvar):
                 if p.var[i].name == 'model':
                     if p.var[i].type == 'string':
-                        print p.var[i].val
                         if p.var[i].val == 'dd':
                             transport_model1 = 2
                         elif p.var[i].val =='clbte':
@@ -566,7 +554,6 @@ while p.err != -1:
 
                 elif p.var[i].name == 'dg':
                     if p.var[i].type == 'string':
-                        print p.var[i].val.lower
                         if p.var[i].val.lower() == 'true':
                             DG_flag = 1
                         elif p.var[i].val.lower() == 'false':
@@ -617,14 +604,7 @@ if transport_model1 != 3:
 #    return
 
 
-print Ng_step
-print type(Nd_step)
-print Ng_step>20
-print int(Nd_step) > int(20)
-print (Ng_step > 20) or (Nd_step > 20)
 if Ng_step > 20 or Nd_step > 20:
-    print Ng_step
-    print Nd_step
     print 'More than 20 bias points specified'
     exit()
 

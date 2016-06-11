@@ -137,9 +137,6 @@ def parser(fin, p):
             return
 
         line = next(fin, None)
-        print fin.name
-        print line
-        print 'asd'
         if line == None:
             p.err = -1
             p.errmess = 'return due to none'
@@ -150,20 +147,14 @@ def parser(fin, p):
 
 
         if line:
-            print 'de'
-            print np.size(list(line))
-            print line[0]
             if (np.size(list(line))== 1  or line[0] == '$' or line[0] == '%'):
-                print 'rt'
                 line_temp = list(line)
                 line_temp[0] = ' '
                 line = ''.join(line_temp)
         else:
-            print 'ert'
             line = ' '
 
     statement = line
-    print 'e'
 
     # Read remaining lines of definition statement if continued
 
@@ -171,10 +162,8 @@ def parser(fin, p):
     line_temp[0] = ' '
     line = ''.join(line_temp)
     while (line[0] == ' '):
-        print 'asd'
 
         line = next(fin, None)
-        print line
         if line == None:
             break
 
@@ -185,7 +174,6 @@ def parser(fin, p):
 
         if line:
             if(line[0]=='+'):
-                print 'entline'
                 line_temp = list(line)
                 line_temp[0] = ' '
                 line = ''.join(line_temp)
@@ -200,7 +188,6 @@ def parser(fin, p):
     # replace all occurrences of ',' with a space, ' '
 
     statement = statement.replace(',', ' ')
-    print statement
 
     # decode the statement
 
@@ -214,14 +201,17 @@ def parser(fin, p):
         return
 
     # get statement name
-
-    [p.ncard, rem] = statement.split(' ',1)
-    rem = rem.rstrip()
+    if len(statement.split(' ',1)) != 1:
+        [p.ncard, rem] = statement.split(' ', 1)
+        rem = rem.rstrip()
+    else:
+        p.ncard = statement
+        p.ncard = p.ncard.rstrip()
+        rem = ''
 
     # If the end card is encounterd exit out from the parser
-
     if p.ncard == 'end':
-        p.err=1
+        p.err = -1
         return
 
     # extract tokens
@@ -233,16 +223,12 @@ def parser(fin, p):
             break
         rem = rem.lstrip()
 
-        print rem
         try:
             [token, rem] = rem.split(' ',1)
         except ValueError:
             token = rem
             rem = None
-        print token
         n = np.size(token)
-        print n
-        print i
         if(n==0):
            break
 
@@ -251,7 +237,6 @@ def parser(fin, p):
            list1 = [token]
         else:
            list1.append(token)
-        print list1
 
     # interpret list of tokens
     n = np.size(list1)
@@ -260,8 +245,6 @@ def parser(fin, p):
         p.add_var()
 
     for i in np.arange(0,n):
-        print 'dline'
-        print rem
         [vname, rem] = list1[i].split('=',1)
         rem = rem.lstrip()
         rem = rem.rstrip()
@@ -276,9 +259,6 @@ def parser(fin, p):
                 nd = np.size(delims)
                 nv = nd+1
             p.var[i].nval = nv
-            print p.var[i].nval
-            print 'asdawe'
-            print rem
             #p.var[i].add_val(nv)
             for j in np.arange(0,nv):
                 if len(rem.split('/')) != 1:
@@ -291,7 +271,6 @@ def parser(fin, p):
                     number = float(value)
                 except ValueError:
                     number = ''
-                print number
                 if number == '':
                     if p.var[i].type == 'number':
                         p.err = 999
@@ -305,18 +284,13 @@ def parser(fin, p):
                         p.errmess = 'cannot mix numbers and strings in:' + p.var[i].name
 
                     p.var[i].type = 'number'
-                    print number
-                    print i
                     p.var[i].val = number
-                    print p.var[i].name
-                    print p.var[i].val
         else:
             p.var[i].nval = 0
             p.var[i].type = 'empty'
 
     p.err = 1
     p.errmess = 'no errors detected on assignment statement'
-    print 'c'
 
     return
 

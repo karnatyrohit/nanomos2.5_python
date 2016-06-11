@@ -47,7 +47,7 @@ def doping(Nx, Ny, Ntotal, junction_l, junction_r, Nd, N_sd, N_body):
 
     ######################ABRUPT PROFILE on BOTH SIDE#########################
     elif dopslope_s == 0 and dopslope_d == 0:
-        for iii_row in np.arange((Nx*(t_topa+1))/Nx), ((Ntotal-Nx*t_bota)/Nx-1):
+        for iii_row in np.arange(((Nx*(t_topa+1))/Nx), ((Ntotal-Nx*t_bota)/Nx-1)):
             for iii_col in np.arange(0, junction_l):
                 i_node = iii_row*Nx+iii_col
                 Nd[i_node] = N_sd-N_body

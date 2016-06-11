@@ -1,7 +1,6 @@
 
 import numpy as np
-import string as str
-
+import fileinput
 
 def parser(fin, p):
     #
@@ -137,50 +136,71 @@ def parser(fin, p):
             p.errmess = 'end of file'
             return
 
-        line = next(fin,None)
+        line = next(fin, None)
+        print fin.name
+        print line
+        print 'asd'
         if line == None:
-            p.ncard = 'End-of-File'
             p.err = -1
-            p.errmess = 'end of file'
+            p.errmess = 'return due to none'
+            #p.ncard = 'End-of-File'
+            #p.err = -1
+            #p.errmess = 'end of file'
             return
 
+
         if line:
-            if (np.size(line)== 1  or line[0] == '$' or line[0] == '%'):
+            print 'de'
+            print np.size(list(line))
+            print line[0]
+            if (np.size(list(line))== 1  or line[0] == '$' or line[0] == '%'):
+                print 'rt'
                 line_temp = list(line)
                 line_temp[0] = ' '
-                line = str.join(line_temp)
+                line = ''.join(line_temp)
         else:
+            print 'ert'
             line = ' '
 
     statement = line
+    print 'e'
 
     # Read remaining lines of definition statement if continued
 
-    line[0].append(' ')
+    line_temp = list(line)
+    line_temp[0] = ' '
+    line = ''.join(line_temp)
     while (line[0] == ' '):
-
-        if fin.read() == '':
-            break
+        print 'asd'
 
         line = next(fin, None)
+        print line
+        if line == None:
+            break
 
-        if np.size(line)== 1:
-            line[0]=' '
+        if np.size(list(line))== 1:
+            line_temp = list(line)
+            line_temp[0] = ' '
+            line = ''.join(line_temp)
 
         if line:
             if(line[0]=='+'):
-                line[0]=' '
+                print 'entline'
+                line_temp = list(line)
+                line_temp[0] = ' '
+                line = ''.join(line_temp)
                 statement += line
             else:
-                fin.seek(-(max(np.size(line))+1),1)
+                #fin.seek((np.size(line)+1), 1)
                 break
         else:
            break
     #      line[0]=' '
 
-    # replace all occurances of ',' with a space, ' '
+    # replace all occurrences of ',' with a space, ' '
 
-    statement = statement.replace(',',' ')
+    statement = statement.replace(',', ' ')
+    print statement
 
     # decode the statement
 
@@ -209,9 +229,20 @@ def parser(fin, p):
     i=0
 
     while i >= 0:
+        if rem is None:
+            break
+        rem = rem.lstrip()
 
-        [token, rem] = rem.split(' ',1)
+        print rem
+        try:
+            [token, rem] = rem.split(' ',1)
+        except ValueError:
+            token = rem
+            rem = None
+        print token
         n = np.size(token)
+        print n
+        print i
         if(n==0):
            break
 
@@ -219,55 +250,73 @@ def parser(fin, p):
         if i == 1:
            list1 = [token]
         else:
-           list1 = list1.append(token)
+           list1.append(token)
+        print list1
 
     # interpret list of tokens
     n = np.size(list1)
     p.nvar = n
+    for ind in np.arange(n):
+        p.add_var()
 
     for i in np.arange(0,n):
-
+        print 'dline'
+        print rem
         [vname, rem] = list1[i].split('=',1)
-        rem[1,1] = ' '
         rem = rem.lstrip()
         rem = rem.rstrip()
-        p.var(i).name = vname.rstrip()
-        p.var(i).type='      '
+        p.var[i].name = vname.rstrip()
+        p.var[i].type='      '
         if rem:
             # test for array of values
             delims = rem.find('/')
-            nd = np.size(delims)
-            nv=nd+1
+            if delims == -1:
+                nv = 1
+            else:
+                nd = np.size(delims)
+                nv = nd+1
             p.var[i].nval = nv
+            print p.var[i].nval
+            print 'asdawe'
+            print rem
+            #p.var[i].add_val(nv)
             for j in np.arange(0,nv):
-                [value, rem] = rem.split('/')
-                rem[1,1] = ' '
+                if len(rem.split('/')) != 1:
+                    [value, rem] = rem.split('/',1)
+                else:
+                    value = rem
                 rem = rem.lstrip()
                 rem = rem.rstrip()
                 try:
                     number = float(value)
                 except ValueError:
                     number = ''
-                if not number:
-                    if p.var(i).type == 'number':
+                print number
+                if number == '':
+                    if p.var[i].type == 'number':
                         p.err = 999
                         p.errmess = 'cannot mix numbers and strings in:' + p.var[i].name
                         return
                     p.var[i].type = 'string'
-                    p.var[i].val[j] = value
+                    p.var[i].val = value
                 else:
-                    if p.var(i).type == 'string':
+                    if p.var[i].type == 'string':
                         p.err = 999
                         p.errmess = 'cannot mix numbers and strings in:' + p.var[i].name
 
                     p.var[i].type = 'number'
-                    p.var[i].val[j] = number
+                    print number
+                    print i
+                    p.var[i].val = number
+                    print p.var[i].name
+                    print p.var[i].val
         else:
             p.var[i].nval = 0
             p.var[i].type = 'empty'
 
     p.err = 1
     p.errmess = 'no errors detected on assignment statement'
+    print 'c'
 
     return
 

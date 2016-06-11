@@ -7,7 +7,7 @@ import sys
 import numpy as np
 from parser import parser
 
-# DEVICE DIRECTIVE
+"""# DEVICE DIRECTIVE
 Nsd = 2e20; Nbody = 0; Lg_top = 9; Lg_bot = 9; Lsd = 10
 overlap_s = -4; overlap_d = -4
 dopslope_s=1; dopslope_d=1
@@ -48,27 +48,65 @@ ox_pnt_flag = 0
 
 # PLOTTING CAPABILITES - yes =1. no =0
 plot_IV = 1; plot_Ec3d = 0; plot_Ne3d = 0; plot_Ec_sub = 0; plot_Nesub = 0
-plot_Te = 0; plot_Ec_IV = 0; plot_Ne_IV = 0
+plot_Te = 0; plot_Ec_IV = 0; plot_Ne_IV = 0"""
 
 filename = raw_input('Enter filename to be run')
-#dirname = input('Enter name output directory')
+# dirname = input('Enter name output directory')
 
 
-class p:
+
+class Var:
+    name = ''
+    type = ''
+    nval = 0
+    val =  0
+
+    """def add_val(self,j):
+        for i_val in range(j):
+            self.val.append(0)
+            print 'ran'"""
+
+
+class P:
     err = 1
     ncard = ''
     nvar = 0
     var = []
+    errmess = ''
+
+    def add_var(self):
+        self.var.append(Var())
+
+    """def reset(self):
+        err = 1
+        ncard = ''
+        nvar = 0
+        var = []"""
+
+p = P()
 
 fin = open(filename, 'r')
+t= 0
 
 while p.err != -1:
+    print p.ncard
+    if np.size(p.var):
+        print p.var[1].val
+    p.ncard = ''
+    p.nvar = 0
+    p.var = []
+    #p.reset()
+    print p.ncard
+    if np.size(p.var):
+        print p.var[1].val
     parser(fin, p)
+    print 'b'
+    print p.errmess
+    t=1
 
     if p.err == 1 or p.err == 999:
-
         if p.ncard == 'device':
-            for i in np.arange(0,p.nvar):
+            for i in np.arange(0, p.nvar):
                 if p.var[i].name == 'nsd':
                     if p.var[i].type == 'number':
                         Nsd = p.var[i].val
@@ -102,14 +140,14 @@ while p.err != -1:
                         Lsd=p.var[i].val
                     else:
                         print 'Invalid assignment for lsd'
-                    exit()
+                        exit()
 
                 elif p.var[i].name == 'overlap_s':
                     if p.var[i].type == 'number':
                         overlap_s=p.var[i].val
                     else:
                         print 'Invalid assignment for overlap_s'
-                    exit()
+                        exit()
 
                 elif p.var[i].name == 'overlap_d':
                     if p.var[i].type == 'number':
@@ -184,9 +222,11 @@ while p.err != -1:
                         exit()
 
         elif p.ncard == 'transport':
+            print 'a'
             for i in np.arange(0,p.nvar):
                 if p.var[i].name == 'model':
                     if p.var[i].type == 'string':
+                        print p.var[i].val
                         if p.var[i].val == 'dd':
                             transport_model1 = 2
                         elif p.var[i].val =='clbte':
@@ -303,7 +343,7 @@ while p.err != -1:
                         Vd_initial=p.var[i].val
                     else:
                         print 'Invalid assignment for vd_initial'
-                exit()
+                        exit()
 
 
 
@@ -371,7 +411,7 @@ while p.err != -1:
                         eps_si=p.var[i].val
                     else:
                         print 'Invalid assignment for ksi'
-                exit()
+                        exit()
 
 
 
@@ -412,94 +452,94 @@ while p.err != -1:
 
 
                 #Ec plot
-            if p.var[i].name == 'Ec3d':
-                if p.var[i].type == 'string':
-                    if p.var[i].val == 'y':
-                        plot_Ec3d=1
+                if p.var[i].name == 'Ec3d':
+                    if p.var[i].type == 'string':
+                        if p.var[i].val == 'y':
+                            plot_Ec3d=1
+                        else:
+                            plot_Ec3d=0
+
                     else:
-                        plot_Ec3d=0
-
-                else:
-                    print 'Invalid assignment for Ec'
-                    exit()
+                        print 'Invalid assignment for Ec'
+                        exit()
 
 
-                #Ne plot
-            if p.var[i].name == 'Ne3d':
-                if p.var[i].type == 'string':
-                    if p.var[i].val =='y':
-                        plot_Ne3d=1
+                    #Ne plot
+                if p.var[i].name == 'Ne3d':
+                    if p.var[i].type == 'string':
+                        if p.var[i].val =='y':
+                            plot_Ne3d=1
+                        else:
+                            plot_Ne3d=0
+
                     else:
-                        plot_Ne3d=0
-
-                else:
-                    print 'Invalid assignment for Ne'
-                    exit()
+                        print 'Invalid assignment for Ne'
+                        exit()
 
 
-                #Ec_sub plot
-            if p.var[i].name == 'Ec_sub':
-                if p.var[i].type == 'string':
-                    if p.var[i].val == 'y':
-                        plot_Ecsub=1
+                    #Ec_sub plot
+                if p.var[i].name == 'Ec_sub':
+                    if p.var[i].type == 'string':
+                        if p.var[i].val == 'y':
+                            plot_Ecsub=1
+                        else:
+                            plot_Ecsub=0
+
                     else:
-                        plot_Ecsub=0
-
-                else:
-                    print 'Invalid assignment for Ecsub'
-                    exit()
+                        print 'Invalid assignment for Ecsub'
+                        exit()
 
 
-                #Ne_sub plot
-            if p.var[i].name == 'Ne_sub':
-                if p.var[i].type == 'string':
-                    if p.var[i].val == 'y':
-                        plot_Nesub=1
+                    #Ne_sub plot
+                if p.var[i].name == 'Ne_sub':
+                    if p.var[i].type == 'string':
+                        if p.var[i].val == 'y':
+                            plot_Nesub=1
+                        else:
+                            plot_Nesub=0
+
                     else:
-                        plot_Nesub=0
-
-                else:
-                    print 'Invalid assignment for Ne_sub'
-                    exit()
+                        print 'Invalid assignment for Ne_sub'
+                        exit()
 
 
-                #Te plot
-            if p.var[i].name == 'Te':
-                if p.var[i].type == 'string':
-                    if p.var[i].val == 'y':
-                        plot_Te=1
+                    #Te plot
+                if p.var[i].name == 'Te':
+                    if p.var[i].type == 'string':
+                        if p.var[i].val == 'y':
+                            plot_Te=1
+                        else:
+                            plot_Te=0
+
                     else:
-                        plot_Te=0
-
-                else:
-                    print 'Invalid assignment for Te'
-                    exit()
+                        print 'Invalid assignment for Te'
+                        exit()
 
 
-                #Ec_IV plot
-            if p.var[i].name == 'Ec_IV':
-                if p.var[i].type == 'string':
-                    if p.var[i].val == 'y':
-                        plot_Ec_IV=1
+                    #Ec_IV plot
+                if p.var[i].name == 'Ec_IV':
+                    if p.var[i].type == 'string':
+                        if p.var[i].val == 'y':
+                            plot_Ec_IV=1
+                        else:
+                            plot_Ec_IV=0
+
                     else:
-                        plot_Ec_IV=0
-
-                else:
-                    print 'Invalid assignment for Ec_IV'
-                    exit()
+                        print 'Invalid assignment for Ec_IV'
+                        exit()
 
 
-                #Ne_IV plot
-            if p.var[i].name == 'Ne_IV':
-                if p.var[i].type == 'string':
-                    if p.var[i].val == 'y':
-                        plot_Ne_IV=1
+                    #Ne_IV plot
+                if p.var[i].name == 'Ne_IV':
+                    if p.var[i].type == 'string':
+                        if p.var[i].val == 'y':
+                            plot_Ne_IV=1
+                        else:
+                            plot_Ne_IV=0
+
                     else:
-                        plot_Ne_IV=0
-
-                else:
-                    print 'Invalid assignment for Ne_IV'
-                    exit()
+                        print 'Invalid assignment for Ne_IV'
+                        exit()
 
 
 
@@ -525,28 +565,47 @@ while p.err != -1:
                         exit()
 
                 elif p.var[i].name == 'dg':
-                    if p.var[i].type == 'number':
-                        DG_flag=p.var[i].val
+                    if p.var[i].type == 'string':
+                        print p.var[i].val.lower
+                        if p.var[i].val.lower() == 'true':
+                            DG_flag = 1
+                        elif p.var[i].val.lower() == 'false':
+                            DG_flag = 0
+                        else:
+                            print 'Invalid assignment for dg'
+                            exit()
                     else:
                         print 'Invalid assignment for dg'
                         exit()
 
                 elif p.var[i].name == 'fermi':
-                    if p.var[i].type == 'number':
-                        fermiflag = p.var[i].val
+                    if p.var[i].type == 'string':
+                        if p.var[i].val.lower() == 'true':
+                            fermiflag = 1
+                        elif p.var[i].val.lower() == 'false':
+                            fermiflag = 0
+                        else:
+                            print 'Invalid assignment for fermi'
+                            exit()
                     else:
                         print 'Invalid assignment for fermi'
                         exit()
 
                 elif p.var[i].name == 'ox_penetrate':
-                    if p.var[i].type == 'number':
-                        ox_pnt_flag=p.var[i].val
+                    if p.var[i].type == 'string':
+                        if p.var[i].val.lower() == 'true':
+                            ox_pnt_flag = 1
+                        elif p.var[i].val.lower() == 'false':
+                            ox_pnt_flag = 0
+                        else:
+                            print 'Invalid assignment for ox_penetrate'
+                            exit()
                     else:
                         print 'Invalid assignment for ox_penetrate'
                         exit()
 
 fin.close()
-p.err=1
+p.err = 1
 
 if transport_model1 != 3:
         if (Vg1>1 or Vg2>1 or Vs>1 or Vdi>1):
@@ -558,7 +617,14 @@ if transport_model1 != 3:
 #    return
 
 
-if (Ng_step>20 or Nd_step>20):
+print Ng_step
+print type(Nd_step)
+print Ng_step>20
+print int(Nd_step) > int(20)
+print (Ng_step > 20) or (Nd_step > 20)
+if Ng_step > 20 or Nd_step > 20:
+    print Ng_step
+    print Nd_step
     print 'More than 20 bias points specified'
     exit()
 
@@ -609,7 +675,7 @@ class Nbody1:
     value = Nbody
 
 
-if transport_model1 == 'dd':
+"""if transport_model1 == 'dd':
     transport_model1 = 2
 elif transport_model1 == 'clbte':
     transport_model1 = 3
@@ -621,6 +687,7 @@ elif transport_model1 == 'et':
     transport_model1 = 6
 else:
     print '****** ERROR !!! MODEL CAN ONLY BE DD/CLBTE/QBTE/ET/QDTE *******'
+    exit()"""
 ######################################################################
 
 

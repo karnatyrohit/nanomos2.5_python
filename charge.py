@@ -192,15 +192,15 @@ def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junct
         # Remain constant...This maybe more PCU intensive...
 
         [Ec_peak, i_peak] = np.max(U_sub[t_vall, :, max_subband])
-        Ec_peak = np.max(-Vs,Ec_peak)
-        E_number = round((Ec_peak+Ef_tail_up-U_sub[1,Nx,1]+Ef_tail_low)/E_step)+2
-        E = np.linspace((U_sub[1,Nx,1]-Ef_tail_low),(Ec_peak+Ef_tail_up),E_number)
-        delta_E = ((Ec_peak+Ef_tail_up)-(U_sub[1,Nx,1]-Ef_tail_low))/(E_number-1)
+        Ec_peak = np.max(-Vs, Ec_peak)
+        E_number = round((Ec_peak+Ef_tail_up-U_sub[0, Nx-1, 0]+Ef_tail_low)/E_step)+2
+        E = np.linspace((U_sub[0, Nx-1, 0]-Ef_tail_low), (Ec_peak+Ef_tail_up), E_number)
+        delta_E = ((Ec_peak+Ef_tail_up)-(U_sub[0, Nx-1, 0]-Ef_tail_low))/(E_number-1)
 
-        for i_val in np.arange(0,t_vall):
-            Ne_2d = 2*np.sqrt(mx(i_val)*m_e*(k_B*Temp/q)*q/(2*np.pi^3))/(h_bar*dx)
-            tt = (h_bar^2)/(2*my(i_val)*m_e*(dx^2)*q)
-            A = tt*((2*np.eye(Nx))-(np.diag(np.ones(Nx-1),1))-(np.diag(np.ones(Nx-1),-1)))
+        for i_val in np.arange(0, t_vall):
+            Ne_2d = 2*np.sqrt(mx[i_val]*m_e*(k_B*Temp/q)*q/(2*np.pi**3))/(h_bar*dx)
+            tt = (h_bar**2)/(2*my[i_val]*m_e*(dx**2)*q)
+            A = tt*((2*np.eye(Nx))-(np.diag(np.ones(Nx-1), 1))-(np.diag(np.ones(Nx-1), -1)))
 
             for i_sub in np.arange(0,max_subband):
                 U_bias = U_sub[i_val, :, i_sub]
@@ -212,8 +212,8 @@ def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junct
                 N_den = np.zeros((Nx,1))
                 B_s = np.zeros((Nx,1))
                 B_d = np.zeros((Nx,1))
-                B_s[1] = 1
-                B_d[Nx] = 1
+                B_s[0] = 1
+                B_d[Nx-1] = 1
                 spB_s = sparse.csr_matrix(B_s)
                 spB_d = sparse.csr_matrix(B_d)
 
@@ -234,12 +234,12 @@ def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junct
                     #N_dos_one(:,k)=-abs(G_s).^2*imag(con_s)-abs(G_d).^2*imag(con_d)
                 #end
 
-                [N_den1, Nquad] = myquad(func_energy, E[1], E[E_number], 1e-6, [], tt, U_bias, A, spB_s, spB_d)
-                N_den = N_den1/(E[2]-E[1])
+                [N_den1, Nquad] = myquad(func_energy, E[0], E[E_number-1], 1e-6, [], tt, U_bias, A, spB_s, spB_d)
+                N_den = N_den1/(E[1]-E[0])
 
-                Ne_sub[i_val, :,i_sub] = (N_den.todense())*Ne_2d*delta_E
+                Ne_sub[i_val, :, i_sub] = (N_den.todense())*Ne_2d*delta_E
                 for i_node in np.arange(0,Nx):
-                    N_body[:,i_node]=Ne_sub[i_val, i_node,i_sub]*W_sub[i_sub, i_val, :,i_node]/dy
+                    N_body[:,i_node] = Ne_sub[i_val, i_node, i_sub]*W_sub[i_sub, i_val, :, i_node]/dy
 
                 N_body_sum = N_body_sum+N_body
 
@@ -251,9 +251,9 @@ def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junct
             Ne_new[0:Nx*(t_topa+1)] = Ne_old[0:Nx*(t_topa+1)]
             Ne_new[Nx*(t_topa+1):Nx*(t_topa+t_sia)] = np.reshape((N_body_sum[1:Np_v-1,:]),(1,Nx*(Np_v-2))).transpose()
             Ne_new[Nx*(t_topa+t_sia):Ntotal] = Ne_old[(Ntotal-Nx*(t_bota+1)):Ntotal]
-            Ne_new = np.reshape(Ne_new,(Ntotal,1))
+            Ne_new = np.reshape(Ne_new, (Ntotal, 1))
         elif ox_pnt_flag == 1:
-           Ne_new = np.reshape(N_body_sum.transpose(), (1,Ntotal)).transpose()
+           Ne_new = np.reshape(N_body_sum.transpose(), (1, Ntotal)).transpose()
 
         globvars.E = E
 
@@ -261,7 +261,7 @@ def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junct
     ######################START OF VARIABLE CHANGE PART#############################
     ################################################################################
 
-    if ox_pnt_flag == 0: # No electron penetration into oxide
+    if ox_pnt_flag == 0:  # No electron penetration into oxide
         for iii_row in np.arange((Nx*(t_topa+1))/Nx, (Ntotal-Nx*t_bota)/Nx-1):
             for iii_col in np.arange(0, Nx):
                 i_node = iii_row*Nx+iii_col

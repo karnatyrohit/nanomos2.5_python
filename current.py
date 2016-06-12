@@ -128,9 +128,9 @@ def current(Ne, Ec, NE_sub, E_sub, Nx, Ny, Ntotal, mx, my ,mz ):
 
         U_bias = np.zeros((Nx,1))
 
-        Ec_peak = np.max(-Vs, np.max(E_sub[t_vall, :, max_subband]))
+        Ec_peak = np.max(-Vs, np.max(E_sub[t_vall-1, :, max_subband-1]))
         E_number = round((Ec_peak+Ef_tail_up-E_sub[0, Nx-1, 0] + Ef_tail_low)/E_step)+2
-        E = np.linspace((E_sub[1, Nx, 1]-Ef_tail_low),(Ec_peak+Ef_tail_up),E_number)
+        E = np.linspace((E_sub[0, Nx-1, 0]-Ef_tail_low),(Ec_peak+Ef_tail_up),E_number)
         delta_E = ((Ec_peak+Ef_tail_up)-(E_sub[0, Nx-1, 0]-Ef_tail_low))/(E_number-1)
 
         N_dos_one = np.zeros((Nx,E_number))
@@ -142,8 +142,9 @@ def current(Ne, Ec, NE_sub, E_sub, Nx, Ny, Ntotal, mx, my ,mz ):
 
         for i_val in np.arange(0,t_vall):
             Ne_2d = 2*np.sqrt(mx[i_val]*m_e*(k_B*Temp/q)*q/(2*np.pi**3))/(h_bar*dx)
-            Ie_2d = 2*q**2/(np.pi**2*h_bar**2)*np.sqrt(mx(i_val)*m_e*(k_B*Temp/q)*q*np.pi/2)
+            Ie_2d = 2*q**2/(np.pi**2*h_bar**2)*np.sqrt(mx[i_val]*m_e*(k_B*Temp/q)*q*np.pi/2)
             tt = (h_bar**2)/(2*my[i_val]*m_e*(dx**2)*q)
+            tt = float(tt)
             A = tt*((2*np.eye(Nx))-(np.diag(np.ones(Nx-1), 1))-(np.diag(np.ones(Nx-1), -1)))
 
             for i_sub in np.arange(0,max_subband):
@@ -153,10 +154,10 @@ def current(Ne, Ec, NE_sub, E_sub, Nx, Ny, Ntotal, mx, my ,mz ):
                 #E = np.linspace((U_bias(Nx)-Ef_tail_low),(Ec_peak+Ef_tail_up),E_number)
                 #delta_E = ((Ec_peak+Ef_tail_up)-(U_bias(Nx)-Ef_tail_low))/(E_number-1)
 
-                B_d = np.zeros((Nx-1,0))
+                B_d = np.zeros((Nx, 1))
                 B_d[Nx-1] = 1
                 spB_d = sparse.csr_matrix(B_d)
-                B_s = np.zeros((Nx,1))
+                B_s = np.zeros((Nx, 1))
                 B_s[0] = 1
                 spB_s = sparse.csr_matrix(B_s)
 
@@ -164,11 +165,12 @@ def current(Ne, Ec, NE_sub, E_sub, Nx, Ny, Ntotal, mx, my ,mz ):
                 for k in np.arange(0,E_number):
                     ee = E[k]
                     ep = ee + eta
-                    ck = 1-((ep-U_bias(1))/(2*tt))
+                    ck = 1-((ep-U_bias[0])/(2*tt))
                     con_s = -tt*np.exp(1j*np.arccos(ck))
-                    ck = 1-((ep-U_bias(Nx))/(2*tt))
+                    ck = 1-((ep-U_bias[Nx-1])/(2*tt))
                     con_d = -tt*np.exp(1j*np.arccos(ck))
                     U_eff = U_bias
+                    U_eff = U_eff + 0j
                     U_eff[0] = U_bias[0] + con_s
                     U_eff[Nx-1] = U_bias[Nx-1] + con_d
                     G_inv = sparse.csr_matrix((ep*np.eye(Nx))-A-np.diag(U_eff))
@@ -176,9 +178,9 @@ def current(Ne, Ec, NE_sub, E_sub, Nx, Ny, Ntotal, mx, my ,mz ):
                     G_d = spsolve(G_inv, spB_d)
                     f_1 = fermi(((-Vs-ee)/(k_B*Temp/q)), fermi_flag, -1.0/2.0)
                     f_2 = fermi(((-Vd-ee)/(k_B*Temp/q)), fermi_flag, -1.0/2.0)
-                    Ie_tem = Ie_tem+abs(G_d(1))**2*np.imag(con_s)*np.imag(con_d)*4*(f_1-f_2)
-                    Trans[k] = abs(G_d(1))**2*np.imag(con_s)*np.imag(con_d)*4
-                    N_dos_one[:,k] = -abs(G_s)**2*np.imag(con_s)-abs(G_d)**2*np.imag(con_d)
+                    Ie_tem = Ie_tem+abs(G_d[0])**2*np.imag(con_s)*np.imag(con_d)*4*(f_1-f_2)
+                    Trans[k] = abs(G_d[0])**2*np.imag(con_s)*np.imag(con_d)*4
+                    N_dos_one[:, k] = -abs(G_s)**2*np.imag(con_s)-abs(G_d)**2*np.imag(con_d)
 
                 N_dos = N_dos+Ne_2d*N_dos_one
 

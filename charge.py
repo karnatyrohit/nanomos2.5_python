@@ -183,7 +183,7 @@ def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junct
     elif transport_model == 4: #BALLISTIC TRANSPORT MODEL USING GREEN FUNCTION APPROACH
     ##########################################################################
 
-        [U_sub , W_sub] = schred(Ec_old)
+        [U_sub , W_sub] = schred(Ec_old, Nx, Ny, Ntotal, mx, my, mz)
 
         E_sub = U_sub
 
@@ -191,15 +191,17 @@ def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junct
         # When simulating several valleys and subband so the size of the DOS matrix
         # Remain constant...This maybe more PCU intensive...
 
-        [Ec_peak, i_peak] = np.max(U_sub[t_vall, :, max_subband])
-        Ec_peak = np.max(-Vs, Ec_peak)
+        [Ec_peak, i_peak] = np.max(U_sub[t_vall-1, :, max_subband-1]), np.argmax(U_sub[t_vall-1, :, max_subband-1])
+        Ec_peak = np.max((-Vs, Ec_peak))
         E_number = round((Ec_peak+Ef_tail_up-U_sub[0, Nx-1, 0]+Ef_tail_low)/E_step)+2
+        print 'E_number = ', E_number
         E = np.linspace((U_sub[0, Nx-1, 0]-Ef_tail_low), (Ec_peak+Ef_tail_up), E_number)
         delta_E = ((Ec_peak+Ef_tail_up)-(U_sub[0, Nx-1, 0]-Ef_tail_low))/(E_number-1)
 
         for i_val in np.arange(0, t_vall):
             Ne_2d = 2*np.sqrt(mx[i_val]*m_e*(k_B*Temp/q)*q/(2*np.pi**3))/(h_bar*dx)
             tt = (h_bar**2)/(2*my[i_val]*m_e*(dx**2)*q)
+            tt = float(tt)
             A = tt*((2*np.eye(Nx))-(np.diag(np.ones(Nx-1), 1))-(np.diag(np.ones(Nx-1), -1)))
 
             for i_sub in np.arange(0,max_subband):
@@ -237,7 +239,7 @@ def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junct
                 [N_den1, Nquad] = myquad(func_energy, E[0], E[E_number-1], 1e-6, [], tt, U_bias, A, spB_s, spB_d)
                 N_den = N_den1/(E[1]-E[0])
 
-                Ne_sub[i_val, :, i_sub] = (N_den.todense())*Ne_2d*delta_E
+                Ne_sub[i_val, :, i_sub] = (N_den)*Ne_2d*delta_E
                 for i_node in np.arange(0,Nx):
                     N_body[:,i_node] = Ne_sub[i_val, i_node, i_sub]*W_sub[i_sub, i_val, :, i_node]/dy
 
@@ -265,7 +267,7 @@ def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junct
         for iii_row in np.arange((Nx*(t_topa+1))/Nx, (Ntotal-Nx*t_bota)/Nx-1):
             for iii_col in np.arange(0, Nx):
                 i_node = iii_row*Nx+iii_col
-                Fn_new[i_node] = anti_dummy(Ne_new[i_node]/Nc,dummy_flag,fermi_flag)*(k_B*Temp/q)+Ec_old[i_node]
+                Fn_new[i_node] = anti_dummy(Ne_new[i_node]/Nc, dummy_flag, fermi_flag)*(k_B*Temp/q)+Ec_old[i_node]
     elif ox_pnt_flag == 1: # assuming electron penetration into oxide
         Fn_new = anti_dummy((Ne_new+div_avd)/Nc, dummy_flag, fermi_flag)*(k_B*Temp/q)+Ec_old
 

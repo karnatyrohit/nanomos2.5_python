@@ -236,8 +236,9 @@ def main():
         Ne_sub_old = Ne_sub
         E_sub_old = E_sub
 
-        [Ec_new] = poisson(spNd, spFn, spEc, F_prime, div_avd, charge_fac, Eg1, Eg2, Es, Ed, Nx, Ny, Ntotal)
+        [Ec_new] = poisson(Nd, Fn_new, Ec_new, F_prime, div_avd, charge_fac, Eg1, Eg2, Es, Ed, Nx, Ny, Ntotal)
 
+        Ec_new = np.reshape(Ec_new,(Ntotal,1))
         spEc = sparse.csr_matrix(Ec_new)
 
         transport_model = trans_temp
@@ -245,8 +246,7 @@ def main():
         iter_outer = 0
         error_outer = 1
         while error_outer >= criterion_outer:
-
-            [Fn_new,Ne_new,Ne_sub,E_sub] = charge(spNe,spEc,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junction_l, junction_r, div_avd)
+            [Fn_new,Ne_new,Ne_sub,E_sub] = charge(spNe, spEc, Ne_sub_old, E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junction_l, junction_r, div_avd)
          #Info_scatter_old=Info_scatter_new
             spEc_old = spEc
             spFn = sparse.csr_matrix(Fn_new)
@@ -254,8 +254,9 @@ def main():
             Ne_sub_old = Ne_sub
             E_sub_old = E_sub
 
-            [Ec_new] = poisson(spNd, spFn, spEc, F_prime, div_avd, charge_fac, Eg1, Eg2, Es, Ed, Nx, Ny, Ntotal)
+            [Ec_new] = poisson(Nd, Fn_new, Ec_new, F_prime, div_avd, charge_fac, Eg1, Eg2, Es, Ed, Nx, Ny, Ntotal)
 
+            Ec_new = np.reshape(Ec_new, (Ntotal, 1))
             spEc = sparse.csr_matrix(Ec_new)
             iter_outer = iter_outer+1
             spEcdiff = spEc - spEc_old

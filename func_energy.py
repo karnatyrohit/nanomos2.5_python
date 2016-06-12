@@ -5,7 +5,8 @@ from scipy import sparse
 from scipy.sparse.linalg import spsolve
 from fermi import fermi
 
-def func_energy(E,tt,U_bias,A,spB_s,spB_d):
+
+def func_energy(E, tt, U_bias, A, spB_s, spB_d):
 
     eta = globvars.eta
     Nx = globvars.Nx
@@ -15,11 +16,13 @@ def func_energy(E,tt,U_bias,A,spB_s,spB_d):
 
     ee = E
     ep = ee+eta
-    ck = 1-((ep-U_bias[0])/(2*tt))
+    ck = 1-((ep-U_bias[0])/(2.0*tt))
+
     con_s = -tt*np.exp(1j*np.arccos(ck))
     ck = 1-((ep-U_bias[Nx-1])/(2*tt))
     con_d = -tt*np.exp(1j*np.arccos(ck))
     U_eff = U_bias
+    U_eff = U_eff + 0j
     U_eff[0] = U_bias[0]+con_s
     U_eff[Nx-1] = U_bias[Nx-1]+con_d
     G_inv = (ep*np.eye(Nx))-A-np.diag(U_eff)

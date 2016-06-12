@@ -96,14 +96,27 @@ def myquad(func, a, b, tol=1e-6, trace=0, *args ):
         y6 = func(b - np.spacing(1)*(b-a), argv[0], argv[1], argv[2], argv[3], argv[4])
         fcnt = fcnt+1
 
-    Q = np.zeros((np.size(y0,1),np.size(y0,2), 3, np.size(y0,0)))
+    if len(np.shape(y0))==1:
+        size0 = np.size(y0,0)
+        size1 = 1
+        size2 = 1
+    elif len(np.shape(y0))==2:
+        size0 = np.size(y0,0)
+        size1 = np.size(y0,1)
+        size2 = 1
+    elif len(np.shape(y0)) == 3:
+        size0 = np.size(y0,0)
+        size1 = np.size(y0,1)
+        size2 = np.size(y0,2)
+
+    Q = np.zeros((size1, size2, 3, size0))
     # Call the recursive core integrator.
     hmin = np.spacing(1)/1024.0*abs(b-a)
     warn = np.zeros(3)
     [Q[:, :, 0, :],fcnt,warn[0]] = quadstep(func, x[0], x[2], np.squeeze(y0), np.squeeze(y1), np.squeeze(y2), tol, trace, fcnt, hmin, argv[0], argv[1], argv[2], argv[3], argv[4])
     [Q[:, :, 1, :],fcnt,warn[1]] = quadstep(func, x[2], x[4], np.squeeze(y2), np.squeeze(y3), np.squeeze(y4), tol, trace, fcnt, hmin, argv[0], argv[1], argv[2], argv[3], argv[4])
     [Q[:, :, 2, :],fcnt,warn[2]] = quadstep(func, x[4], x[6], np.squeeze(y4), np.squeeze(y5), np.squeeze(y6), tol, trace, fcnt, hmin, argv[0], argv[1], argv[2], argv[3], argv[4])
-    Q = np.squeeze(sum(Q,1))
+    Q = np.squeeze(np.sum(Q,2))
     warni = np.max(warn)
 
     if warni == 1:
@@ -154,7 +167,7 @@ def quadstep(func, a, b, fa, fc, fb, tol, trace, fcnt, hmin, *args):
     # One step of Romberg extrapolation.
     Q = Q2 + (Q2 - Q1)/15.0
 
-    Qfin = np.full(len(Q), 2)
+    Qfin = np.full(len(Q), 2, dtype=int)
     np.isfinite(Q, Qfin)
     if not np.min(np.min(np.min(Qfin))):
         # Infinite or Not-a-Number function value encountered.
@@ -166,7 +179,7 @@ def quadstep(func, a, b, fa, fc, fb, tol, trace, fcnt, hmin, *args):
 
     # Check accuracy of integral over this subinterval.
 
-    if max(max((abs(Q2 - Q)))) <= tol:
+    if np.max(np.max((abs(Q2 - Q)))) <= tol:
         warn = 0
         return [Q, fcnt, warn]
 

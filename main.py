@@ -10,6 +10,7 @@ from charge import charge
 from scipy import sparse
 from poisson import poisson
 from current import current
+from globvars import globvars
 
 def main():
     transport_model = transportmodel.value
@@ -98,6 +99,8 @@ def main():
     Nx = round((2*Lsd+Lg_top)/dx)+1
     Ny = round((t_top+t_bot+t_si)/dy)+1
     Ntotal = Nx*Ny
+
+    globvars.Nx = Nx
 
     ###########################################################################
     # Memory allocation

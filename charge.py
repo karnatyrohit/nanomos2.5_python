@@ -9,6 +9,9 @@ from fermi import fermi
 from integral import integral
 from anti_dummy import anti_dummy
 from scipy import sparse
+from myquad import myquad
+from func_energy import func_energy
+from globvars import globvars
 
 
 def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junction_l, junction_r, div_avd):
@@ -27,6 +30,7 @@ def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junct
 
     #######################MODEL 4 related parameters#############################
     eta = 1e-6j
+    globvars.eta = 1e-6j
     Ef_tail_low = 0.01
     Ef_tail_up = 0.3
     E_step = criterion_outer/2.0 #0.5 times criterion_outer
@@ -175,6 +179,83 @@ def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junct
             Ne_new = np.reshape(Ne_new,(Ntotal,1))
         elif ox_pnt_flag == 1:
             Ne_new = np.reshape(N_body_sum.transpose(), (1, Ntotal)).transpose()
+    ##########################################################################
+    elif transport_model == 4: #BALLISTIC TRANSPORT MODEL USING GREEN FUNCTION APPROACH
+    ##########################################################################
+
+        [U_sub , W_sub] = schred(Ec_old)
+
+        E_sub = U_sub
+
+        #E , E_number are defined outside the loop to remain constant
+        # When simulating several valleys and subband so the size of the DOS matrix
+        # Remain constant...This maybe more PCU intensive...
+
+        [Ec_peak, i_peak] = np.max(U_sub[t_vall, :, max_subband])
+        Ec_peak = np.max(-Vs,Ec_peak)
+        E_number = round((Ec_peak+Ef_tail_up-U_sub[1,Nx,1]+Ef_tail_low)/E_step)+2
+        E = np.linspace((U_sub[1,Nx,1]-Ef_tail_low),(Ec_peak+Ef_tail_up),E_number)
+        delta_E = ((Ec_peak+Ef_tail_up)-(U_sub[1,Nx,1]-Ef_tail_low))/(E_number-1)
+
+        for i_val in np.arange(0,t_vall):
+            Ne_2d = 2*np.sqrt(mx(i_val)*m_e*(k_B*Temp/q)*q/(2*np.pi^3))/(h_bar*dx)
+            tt = (h_bar^2)/(2*my(i_val)*m_e*(dx^2)*q)
+            A = tt*((2*np.eye(Nx))-(np.diag(np.ones(Nx-1),1))-(np.diag(np.ones(Nx-1),-1)))
+
+            for i_sub in np.arange(0,max_subband):
+                U_bias = U_sub[i_val, :, i_sub]
+                #[Ec_peak,i_peak]=max(U_bias)
+                #Ec_peak=max(-Vs,max(U_bias))
+                #E_number=round((Ec_peak+Ef_tail_up-U_bias(Nx)+Ef_tail_low)/E_step)+2
+                #E=linspace((U_bias(Nx)-Ef_tail_low),(Ec_peak+Ef_tail_up),E_number)
+                #delta_E=((Ec_peak+Ef_tail_up)-(U_bias(Nx)-Ef_tail_low))/(E_number-1)
+                N_den = np.zeros((Nx,1))
+                B_s = np.zeros((Nx,1))
+                B_d = np.zeros((Nx,1))
+                B_s[1] = 1
+                B_d[Nx] = 1
+                spB_s = sparse.csr_matrix(B_s)
+                spB_d = sparse.csr_matrix(B_d)
+
+                #for k=1:E_number,
+                    #ee=E(k);ep=ee+eta
+                    #ck=1-((ep-U_bias(1))/(2*tt));con_s=-tt*exp(i*acos(ck))
+                    #ck=1-((ep-U_bias(Nx))/(2*tt));con_d=-tt*exp(i*acos(ck))
+                    #U_eff=U_bias
+                    #U_eff(1)=U_bias(1)+con_s
+                    #U_eff(Nx)=U_bias(Nx)+con_d
+                    #G_inv=sparse((ep*eye(Nx))-A-diag(U_eff))
+                    #G_s=G_inv\spB_s
+                    #G_d=G_inv\spB_d
+                    #f_1=fermi(((-Vs-ee)/(k_B*Temp/q)),fermi_flag,-1/2)
+                    #f_2=fermi(((-Vd-ee)/(k_B*Temp/q)),fermi_flag,-1/2)
+                    #N_den=N_den-abs(G_s).^2*imag(con_s)*2*f_1...
+                    #      -abs(G_d).^2*imag(con_d)*2*f_2
+                    #N_dos_one(:,k)=-abs(G_s).^2*imag(con_s)-abs(G_d).^2*imag(con_d)
+                #end
+
+                [N_den1, Nquad] = myquad(func_energy, E[1], E[E_number], 1e-6, [], tt, U_bias, A, spB_s, spB_d)
+                N_den = N_den1/(E[2]-E[1])
+
+                Ne_sub[i_val, :,i_sub] = (N_den.todense())*Ne_2d*delta_E
+                for i_node in np.arange(0,Nx):
+                    N_body[:,i_node]=Ne_sub[i_val, i_node,i_sub]*W_sub[i_sub, i_val, :,i_node]/dy
+
+                N_body_sum = N_body_sum+N_body
+
+        if ox_pnt_flag == 0:
+            #Ne_new=[Ne_old[1:(Nx*(t_topa+1)));...
+            #reshape((N_body_sum(2:Np_v-1,:))',...
+            #Nx*(Np_v-2),1);...
+            #Ne_old((Ntotal-Nx*(t_bota+1)+1):Ntotal)]
+            Ne_new[0:Nx*(t_topa+1)] = Ne_old[0:Nx*(t_topa+1)]
+            Ne_new[Nx*(t_topa+1):Nx*(t_topa+t_sia)] = np.reshape((N_body_sum[1:Np_v-1,:]),(1,Nx*(Np_v-2))).transpose()
+            Ne_new[Nx*(t_topa+t_sia):Ntotal] = Ne_old[(Ntotal-Nx*(t_bota+1)):Ntotal]
+            Ne_new = np.reshape(Ne_new,(Ntotal,1))
+        elif ox_pnt_flag == 1:
+           Ne_new = np.reshape(N_body_sum.transpose(), (1,Ntotal)).transpose()
+
+        globvars.E = E
 
     ################################################################################
     ######################START OF VARIABLE CHANGE PART#############################

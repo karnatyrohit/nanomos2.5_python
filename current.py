@@ -128,8 +128,8 @@ def current(Ne, Ec, NE_sub, E_sub, Nx, Ny, Ntotal, mx, my ,mz ):
 
         U_bias = np.zeros((Nx,1))
 
-        Ec_peak = np.max(-Vs, np.max(E_sub[t_vall-1, :, max_subband-1]))
-        E_number = round((Ec_peak+Ef_tail_up-E_sub[0, Nx-1, 0] + Ef_tail_low)/E_step)+2
+        Ec_peak = np.max((-Vs, np.max(E_sub[t_vall-1, :, max_subband-1])))
+        E_number = round((Ec_peak+Ef_tail_up - E_sub[0, Nx-1, 0] + Ef_tail_low)/E_step)+2
         E = np.linspace((E_sub[0, Nx-1, 0]-Ef_tail_low),(Ec_peak+Ef_tail_up),E_number)
         delta_E = ((Ec_peak+Ef_tail_up)-(E_sub[0, Nx-1, 0]-Ef_tail_low))/(E_number-1)
 
@@ -190,6 +190,7 @@ def current(Ne, Ec, NE_sub, E_sub, Nx, Ny, Ntotal, mx, my ,mz ):
 
         Trans = Trans_sub
         globvars.Trans = Trans
+        globvars.N_dos = N_dos
 
     return [Ie, Ie_sub, Te_sub, Fn_sub]
 

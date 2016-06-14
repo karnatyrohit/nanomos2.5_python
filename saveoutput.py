@@ -132,17 +132,17 @@ def saveoutput(Ec,Ne,Ie,Ne_sub,E_sub,Te_sub,converge,Vd_temp):
 
     # ID-VD CHARACTERISTICS (A/m), SAVED TO "id_vd.dat"
     # -------------------------------------------------
-        if (Nd_step>=1 and Ng_step==0):
-            figure(1)
-            plot(Vd_bias,Ie[0,:],'o-')
-            grid(True)
-            xlabel('V_{DS} [V]')
-            ylabel('I_{DS} [\muA/\mum]')
-            title('I_{DS} vs. V_{DS}')
-            savefig('ID_VD.png')
+    if (Nd_step>=1 and Ng_step==0):
+        figure(1)
+        plot(Vd_bias, Ie[0,:], 'o-')
+        grid(True)
+        xlabel('V_{DS} [V]')
+        ylabel('I_{DS} [\muA/\mum]')
+        title('I_{DS} vs. V_{DS}')
+        savefig('ID_VD.png')
 
-            temmm = [Vd_bias, Ie[0,:]]
-            np.savetxt('ID_VD.dat', temmm, fmt='%e', delimiter=';')
+        temmm = [Vd_bias, Ie[0,:]]
+        np.savetxt('ID_VD.dat', temmm, fmt='%e', delimiter=';')
     #if plot_Iv==1 end
 
     #***************************************************************************************

@@ -7,6 +7,9 @@ import datetime
 from matplotlib.pyplot import *
 import numpy as np
 from globvars import globvars
+from mpl_toolkits.mplot3d import Axes3D as ax
+from matplotlib import cm
+
 
 
 def saveoutput(Ec,Ne,Ie,Ne_sub,E_sub,Te_sub,converge,Vd_temp):
@@ -148,20 +151,32 @@ def saveoutput(Ec,Ne,Ie,Ne_sub,E_sub,Te_sub,converge,Vd_temp):
     #***************************************************************************************
     # Ec(X,Y)
     # -------------------------------------------
-    """if plot_Ec3d==10:
+    if plot_Ec3d == 1:
         figure(6)
-        surf(XI,YI,trMEc)
+        [X, Y] = np.meshgrid(XI, YI)
+        Z = trMEc
+        ax = gca(projection = '3d')
+        surf = ax.plot_surface(X, Y, Z, rstride=3, cstride=3, cmap=cm.coolwarm, linewidth=0.5, antialiased = True)
+
+        #surf(XI,YI,trMEc)
         #shading interp commented out to reduce size of the .ps file
         title('3D Conduction band edge potential profile')
-        hx=xlabel('X [nm]')
-        hy=ylabel('Y [nm]')
-        hz=zlabel('Ec [eV]')
+        ax.set_xlabel('X [nm]')
+        ax.set_ylabel('Y [nm]')
+        ax.set_zlabel('Ec [eV]')
+        ax.view_init(elev=60, azim=50)
+        ax.dist=8
         savefig('Ec_X_Y.png')
 
-        XII = [0, XI]
-        tem1 = [YI, trMEc]
-        tem2 = [XII, tem1]
-        np.savetxt('Ec_X_Y.dat', tem2, fmt='%e', delimiter=';')"""
+        XII = (0, XI)
+        tem1 = (YI, trMEc)
+        tem2 = (XII, tem1)
+        #np.savetxt('Ec_X_Y.dat', tem2, fmt='%e', delimiter=';')
+        #f1 = open('Ec_X_Y','w')
+        #writer = csv.writer(f1, delimiter = ',')
+        #writer.writerows(tem2)
+
+
 
    #*******************************************************************************************
     if (plot_Ecsub==1 and max_subband>=1):
@@ -215,6 +230,145 @@ def saveoutput(Ec,Ne,Ie,Ne_sub,E_sub,Te_sub,converge,Vd_temp):
             ylabel('Energy (eV)')
             savefig('DOS.png')
             #print -depsc2 DOS.ps
+    ################################################################################################
+    if plot_Ne_IV==1:
+    # SUBBAND CHARGE DENSITY (/cm^2) vs X for Diff. Vg
+    # --------------------------------------------------------------
+        if (Ng_step>=1 or (Ng_step==0 and Nd_step==0)):
 
+            figure(2)
+            for iii in np.arange(0,Ng_step+1):
+                Ne1_temp = np.squeeze(Ne_sub[:, iii, Nd_step, :, :])
+                #if len(np.shape(Ne1_temp)) == 1:
+                Ne1 = Ne1_temp
+                #else:
+                #    Ne1 = np.sum(Ne1_temp,0)
+                Ne2 = np.zeros((len(Ne1), Ng_step+1))
+                Ne2[:,iii]=(Ne1)*1e-4
+                plot(XI, Ne2[:, iii], 'r-')
+                hold(True)
+                grid(True)
+
+            if Ng_step>=1:
+                title('2D electron density along the channel at different Vg')
+            elif Ng_step==0:
+                title('2D electron density along the channel')
+            xlabel('X [nm]')
+            ylabel('N2D [cm^{-2}]')
+            savefig('N2D_X1.png')
+
+    #figure(11)
+    #Ne1=sum(squeeze(Ne_sub(:,:,:,1,Nd_step+1)),3);
+    #Ne2(:,1)=sum(Ne1,2)*1e-4;
+    #semilogy(XI',Ne2(:,1),'r-');
+    #hold on
+    #grid on
+    #if Ng_step>0
+    #  for iii=2:Ng_step+1
+    #    Ne1=sum(squeeze(Ne_sub(:,:,:,iii,Nd_step+1)),3);
+    #    Ne2(:,iii)=sum(Ne1,2)*1e-4;
+    #    semilogy(XI',Ne2(:,iii),'r-');
+    #  end
+    #end
+    #title('2D electron density along the channel @Diff. VG');
+    #xlabel('X [nm]');
+    #ylabel('N2D [cm^{-2}]');
+    #print -depsc ./output/LOG_N2D_X.ps
+
+            temmm=[XI,Ne2]
+            #save N2D_X1.dat temmm -ascii;
+
+
+    # SUBBAND CHARGE DENSITY (/cm^2) vs X for Diff. Vd
+    # --------------------------------------------------------------
+        if Nd_step>=1:
+            figure(3)
+            for iii in np.arange(0,Nd_step+1):
+                Ne1_temp = np.squeeze(Ne_sub[:, Ng_step, iii, :, :])
+                #if len(np.size(Ne1_temp)) == 1:
+                Ne1 = Ne1_temp
+                #else:
+                #Ne1 = np.sum(Ne1_temp,0)
+                Ne2 = np.zeros((len(Ne1), Nd_step+1))
+                Ne2[:, iii] = (Ne1)*1e-4
+                plot(XI, Ne2[:, iii], 'r-')
+                hold(True)
+                grid(True)
+            title('2D electron density along the channel at different Vd')
+            xlabel('X [nm]')
+            ylabel('N2D [cm^{-2}]')
+            savefig('N2D_X2.png')
+
+        temmm=[XI,Ne2]
+        #save N2D_X2.dat temmm -ascii
+
+    #******************************************************************************************
+    if plot_Ec_IV==1:
+    # The First SUBBAND ENERGY PROFILE vs X for Diff. Vg
+    # ------------------------------------------------------
+
+        if (Ng_step>=1 or (Ng_step==0 and Nd_step==0)):
+            figure(4)
+            for iii in np.arange(0,Ng_step+1):
+                plot(XI, E_sub[0, iii, Nd_step, :, 0],'r-')
+                hold(True)
+                grid(True)
+
+            if Ng_step>=1:
+                title('The First Subband energy profile along the channel at different Vg')
+            elif Ng_step==0:
+                title('The First Subband energy profile along the channel')
+            xlabel('X [nm]')
+            ylabel('E_{SUB} [eV]')
+            savefig('Ec_X1.png')
+
+            tem = E_sub[0, iii, Nd_step, :, 0]
+            sq_tem = np.squeeze(tem)
+            temmm = [XI, sq_tem]
+            #save Ec_X1.dat temmm -ascii
+
+    # The First SUBBAND ENERGY PROFILE vs X for Diff. Vd
+    # ------------------------------------------------------
+
+        if Nd_step>=1:
+            figure(5)
+            for iii in np.arange(0,Nd_step+1):
+                plot(XI,E_sub[0,Ng_step,iii, :, 0],'r-')
+                hold(True)
+                grid(True)
+
+            title('The First Subband energy profile along the channel at different Vd')
+            xlabel('X [nm]')
+            ylabel('E_{SUB} [eV]')
+            savefig('Ec_X2.png')
+
+            tem = E_sub[0, Ng_step, :, :, 0]
+            sq_tem = np.squeeze(tem)
+            temmm = [XI,sq_tem]
+            #save Ec_X2.dat temmm -ascii
+
+    # 3D CHARGE DENSITY N(X,Y)
+    # ------------------------------------------------------------
+    if plot_Ne3d==1:
+        figure(7)
+        #surf(XI,YI,trMNe)
+        #shading interp commented out to reduce size of the .ps file
+        [X, Y] = np.meshgrid(XI, YI)
+        Z = trMNe
+        ax = gca(projection = '3d')
+        surf = ax.plot_surface(X, Y, Z, rstride=3, cstride=3, cmap=cm.coolwarm, linewidth=0.5, antialiased = True)
+
+        title('3D Electron density profile')
+        ax.set_xlabel('X [nm]')
+        ax.set_ylabel('Y [nm]')
+        ax.set_zlabel('Ne [m^{-3}]')
+        ax.view_init(elev=60, azim=50)
+        ax.dist=8
+        savefig('Ne_X_Y.png')
+
+        XII = [0, XI]
+        tem1 = [YI, trMNe]
+        tem2 = [XII, tem1]
+        #save Ne_X_Y.dat tem2 -ascii
 
     return

@@ -16,6 +16,7 @@ def main():
     transport_model = transportmodel.value
     fermi_flag = fermiflag1.value
     Vd = Vdc.value
+    Is = globvars.Is
 
     N_sd = Nsd1.value
     N_body = Nbody1.value
@@ -63,6 +64,10 @@ def main():
     mx[0] = m_t; mx[1] = m_l; mx[2] = m_t
     my[0] = m_t; my[1] = m_t; my[2] = m_l
     mz[0] = m_l; mz[1] = m_t; mz[2] = m_t
+
+    globvars.mx = mx
+    globvars.my = my
+    globvars.mz = mz
 
     #########################################################################################
     #SPECIFY THE NEUTRAL BOUNDARY ###########################################################
@@ -165,6 +170,8 @@ def main():
     elif transport_model == 2:
         nu_scatter = Nx
 
+    globvars.nu_scatter = nu_scatter
+
     Info_scatter_old = np.zeros((nu_scatter, 4))
     Info_scatter_new = np.zeros((nu_scatter, 4))
 
@@ -179,13 +186,15 @@ def main():
     #============Modified. Mar 18, 2002==================
 
     for i in np.arange(0, nu_scatter):
-        Info_scatter_old[i,2] = i+1
+        Info_scatter_old[i, 1] = i+1
     #Info_scatter_old(i,4)=1/(1/mu_low+...
     #1/(mu_min+(mu_max-mu_min)./(1+(abs(Nd(Nx*round(t_top/dy)+1+Nx+i))/Nref).^alpha)))
     #Info_scatter_old(i,4)=1/(1/mu_low+1/(mu_min+(mu_max-mu_min)./(1+(abs(Nd2D(i,round(Ny/2)))/Nref).^alpha)))
     #============No Methiessen's rule========================================================
-        Info_scatter_old[i,4] = mu_min+(mu_low-mu_min)/(1+(abs(Nd2D[i, round(Ny/2.0) - 1])/Nref)**alpha)  # Rohit - Check for error due to -1
+        Info_scatter_old[i, 3] = mu_min+(mu_low-mu_min)/(1+(abs(Nd2D[i, round(Ny/2.0) - 1])/Nref)**alpha)  # Rohit - Check for error due to -1
     #========================================================================================
+    globvars.Info_scatter_old = Info_scatter_old
+    globvars.Info_scatter_new = Info_scatter_new
 
     #keyboard
     #############################compress matrix#################################
@@ -338,7 +347,8 @@ def main():
                     break
 
             if transport_model == 5:
-                print 'current Is has to be established- coding left'
+                Ie_tem = Is
+                #print 'current Is has to be established- coding left'
                 #Ie_tem = Is   # Rohit look into this global variable
             else:
                 [Ie_tem, Ie_sub, Te_sub, Mu_sub] = current(spNe, spEc, Ne_sub, E_sub, Nx, Ny, Ntotal, mx, my, mz)

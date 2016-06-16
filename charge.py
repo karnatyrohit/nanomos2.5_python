@@ -12,6 +12,8 @@ from scipy import sparse
 from myquad import myquad
 from func_energy import func_energy
 from globvars import globvars
+from scipy.sparse.linalg import spsolve
+from current_mat import current_mat
 
 
 def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junction_l, junction_r, div_avd):
@@ -19,6 +21,7 @@ def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junct
     transport_model = transportmodel.value
     fermi_flag = fermiflag1.value
     Vd = Vdc.value
+    N_dos = globvars.N_dos
 
     Lsda=round(Lsd/dx)
     Lg_topa=round(Lg_top/dx)
@@ -27,6 +30,14 @@ def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junct
     t_bota=round(t_bot/dy)
     t_sia=round(t_si/dy)
     Temp = Te
+
+    #NEGF scattering method parameters
+
+    nu_scatter = globvars.nu_scatter
+    Info_scatter_new  = globvars.Info_scatter_new
+    Info_scatter_old = globvars.Info_scatter_old
+    Is = globvars.Is
+    Id = globvars.Id
 
     #######################MODEL 4 related parameters#############################
     eta = 1e-6j
@@ -258,6 +269,208 @@ def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junct
            Ne_new = np.reshape(N_body_sum.transpose(), (1, Ntotal)).transpose()
 
         globvars.E = E
+
+    ################################################################################
+    elif transport_model == 5: #SCATTERING MODEL USING GREEN"S FUNCTION METHOD*******
+    ################################################################################
+
+        [U_sub, W_sub] = schred(Ec_old, Nx, Ny, Ntotal, mx, my, mz)
+        E_sub = U_sub
+
+        U_scatter = np.zeros((Nx, 1))
+        mu_scatter_old = np.zeros((nu_scatter+2, 1))
+        mu_scatter_new = np.zeros((nu_scatter+2, 1))
+        delta_mu = np.zeros((nu_scatter+2, 1))
+        i_scatter = np.zeros((nu_scatter+2, 1))
+        BB_dummy = np.eye(Nx)
+        Iin = np.zeros((nu_scatter,1))
+
+        #comment the two following line for constant mobility
+        #zeta_self=zeros(nu_scatter,1);
+        #decay_fac=1;%dimensionless
+
+        for i_s in np.arange(0, nu_scatter):
+            i_scatter[i_s] = (Info_scatter_old[i_s, 1])
+
+            # CHANGED BY RAMESH TO TAKE OLD GUESS
+            mu_scatter_old[i_s] = (Info_scatter_new[i_s, 2])
+
+        mu_scatter_old[nu_scatter] = -Vs
+        mu_scatter_old[nu_scatter+1] = -Vd
+        i_scatter[nu_scatter] = 0
+        i_scatter[nu_scatter+1] = Nx-1
+        BB = sparse.lil_matrix((int(Nx), int(nu_scatter+2)), dtype=float)
+
+        for ind in np.arange(0, nu_scatter):
+            for ind2 in np.arange(0, Nx):
+                if BB_dummy[ind2,int(i_scatter[ind])]:
+                    BB[ind2, ind] = BB_dummy[ind2, int(i_scatter[ind])]
+                if BB_dummy[ind2, 0]:
+                    BB[ind2, nu_scatter] = BB_dummy[ind2, 0]
+                if BB_dummy[ind2, Nx-1]:
+                    BB[ind2, nu_scatter + 1] = BB_dummy[ind2, Nx-1]
+
+
+        # BB[:, 0:nu_scatter] = BB_dummy[:,i_scatter[0]: i_scatter[nu_scatter]]
+
+        Ec_peak = np.max((-Vs, np.max(U_sub[0, :, 0])))
+        Ec_bottom = U_sub[0, Nx-1, 0]
+        E_number = round((Ec_peak+Ef_tail_up-Ec_bottom+Ef_tail_low)/E_step)+2
+        E = np.linspace((Ec_bottom-Ef_tail_low), (Ec_peak+Ef_tail_up), E_number)
+        delta_E = ((Ec_peak+Ef_tail_up)-(Ec_bottom-Ef_tail_low))/(E_number-1)
+
+        GG = sparse.csr_matrix((Nx,nu_scatter+2))
+        T_E = np.zeros((nu_scatter+2, E_number, nu_scatter+2))
+
+        # comment the next line and uncomment the previous line for constant mobility
+
+        E_self = np.ones((E_number,nu_scatter+2)) #correction on March 14th to include mobility
+        U_tem = np.zeros((nu_scatter,1))
+
+        # end of initialization
+
+        # ADDED BY RAMESH JAN 13th 03.
+        # We need to compute a mean free path to set
+        # zeta_self based on the Fermi-level of the
+        # probe, subband energy and grid spacing.
+        sum1 = np.zeros((nu_scatter, 1))
+        sum2 = np.zeros((nu_scatter, 1))
+        lambda1 = np.zeros((nu_scatter, 1))
+        for i_val in np.arange(0, t_vall):
+            for i_sub in np.arange(0, max_subband):
+                for i_s in np.arange(0, nu_scatter):
+                    factor = np.exp((Info_scatter_new[i_s,2]-U_sub[i_val, int(i_scatter[i_s]), i_sub])/(k_B*Temp/q))
+                    sum1[i_s] = sum1[i_s]+my[i_val]*m_e*np.log(1+factor)
+                        # Prevent divide by zero
+                    factor1 = np.log(1+factor)
+                    if(factor1<=1e-20):
+                        factor1 = factor
+                    factor2 = factor/(factor1*(1+factor))*fermi(((Info_scatter_new[i_s,2]-U_sub[i_val, int(i_scatter[i_s]),i_sub])/(k_B*Temp/q)),fermi_flag,1.0/2.0)
+                    sum2[i_s] = sum2[i_s]+my[i_val]*m_e*np.sqrt(2*k_B*Temp/(np.pi*mx[i_val]*m_e))*factor2
+
+        for i_s in np.arange(0, nu_scatter):
+            lambda1[i_s]=2*k_B*Temp/q*Info_scatter_old[i_s,3]*sum1[i_s]/sum2[i_s]
+
+        for i_val in np.arange(0,t_vall):
+            Ie_2d = 2*q**2/(np.pi**2*h_bar**2)*np.sqrt(my[i_val]*m_e*(k_B*Temp/q)*q*np.pi/2.0)
+            tt = (h_bar**2)/(2*mx[i_val]*m_e*(dx**2)*q)
+            tt = float(tt)
+            A = tt*((2*np.eye(Nx))-(np.diag(np.ones(Nx-1),1))-(np.diag(np.ones(Nx-1),-1)))
+
+            for i_sub in np.arange(0, max_subband):
+                U_bias=U_sub[i_val, :, i_sub]
+                U_tem=U_bias[(i_scatter[0:nu_scatter]).astype(int)]
+
+                for k in np.arange(0, E_number):
+                    ee=E[k]
+                    ep=ee+eta
+                    ck=1-((ep-U_bias[0])/(2*tt))
+                    con_s=-tt*np.exp(1j*np.arccos(ck))
+                    ck=1-((ep-U_bias[Nx-1])/(2*tt))
+                    con_d=-tt*np.exp(1j*np.arccos(ck))
+
+                # ADDED BY RAMESH JAN 13 03.
+                    for i_s in np.arange(0, nu_scatter):
+                        elutot = ee-(A[int(i_scatter[i_s]), int(i_scatter[i_s])]+U_bias[int(i_scatter[i_s])])
+                        g1 = (elutot+np.sqrt(elutot**2-4.0*tt**2))/(2*tt**2)
+                        g2 = (elutot-np.sqrt(elutot**2-4.0*tt**2))/(2*tt**2)
+                        g3 = (np.imag(g2)<=0)*g2+(np.imag(g1<=0))*g1
+                        E_self[k,i_s] = i*np.imag(g3*2*dx*tt**2/lambda1[i_s])
+
+                    E_self = E_self + 0j
+                    E_self[k, nu_scatter] = con_s
+                    E_self[k, nu_scatter+1] = con_d
+                    print np.shape(E_self[k, :])
+                    print np.shape(U_scatter)
+                    U_scatter[(i_scatter).astype(int)] = (E_self[k,:]).transpose()
+
+                    U_eff = U_bias+U_scatter
+                    G_inv = sparse.csr_matrix((ep*np.eye(Nx))-A-np.diag(U_eff))
+                    GG = spsolve(G_inv,BB)
+                    T_E[:, k, :] = 4*Ie_2d*delta_E*sparse.spdiags(np.imag(E_self[k,:]).transpose(), 0, nu_scatter+2, nu_scatter+2)*abs(GG[(i_scatter).astype(int),:])**2*sparse.spdiags(np.imag(E_self[k,:]).transpose(), 0, nu_scatter+2, nu_scatter+2)+np.squeeze(T_E[:, k, :])
+
+        #calculate current, and search for mu_scatter
+        #based on current continuity
+
+        [Is, Id, Iin, mu_scatter_new] = current_mat(mu_scatter_old, T_E, E)
+
+        #end of mu_scatter search
+
+        #Calculate charge density
+        for i_val in np.arange(0, t_vall):
+            Ne_2d = 2.0*np.sqrt(my[i_val]*m_e*(k_B*Temp/q)*q/(2.0*np.pi**3))/(h_bar*dx)
+            tt = (h_bar**2)/(2.0*mx(i_val)*m_e*(dx**2)*q)
+            tt = float(tt)
+            A = tt*((2.0*np.eye(Nx))-(np.diag(np.ones(Nx-1),1))-(np.diag(np.ones(Nx-1),-1)))
+
+            for i_sub in np.arange(0,max_subband):
+                U_bias = U_sub[i_val, :, i_sub]
+                U_tem = U_bias[(i_scatter[0, nu_scatter]).astype(int)]
+
+                for k in np.arange(0, E_number):
+
+                    # All this needs to be recomputed for multiple bands
+                    #--------------------------------------------------
+                    ee=E[k]
+                    ep=ee+eta
+                    ck=1-((ep-U_bias(1))/(2*tt))
+                    con_s=-tt*np.exp(1j*np.arccos(ck))
+                    ck=1-((ep-U_bias(Nx))/(2*tt))
+                    con_d=-tt*np.exp(1j*np.arccos(ck))
+
+                 # ADDED BY RAMESH JAN 13 03.
+                    for i_s in np.arange(0, nu_scatter):
+                        elutot = ee-(A[int(i_scatter[i_s]),int(i_scatter[i_s])]+U_bias[int(i_scatter[i_s])])
+                        g1 = (elutot+np.sqrt(elutot**2-4*tt**2))/(2*tt**2)
+                        g2 = (elutot-np.sqrt(elutot**2-4*tt**2))/(2*tt**2)
+                        g3 = (np.imag(g2)<=0)*g2+(np.imag(g1<=0))*g1
+                        E_self[k,i_s] = i*np.imag(g3*2*dx*tt**2/lambda1[i_s])
+
+                    E_self = E_self + 0j
+                    E_self[k, nu_scatter] = con_s
+                    E_self[k, nu_scatter+1] = con_d
+                    U_scatter[(i_scatter).astype(int)] = (E_self[k,:]).transpose()
+
+                    U_eff = U_bias+U_scatter
+                    G_inv = sparse.csr_matrix((ep*np.eye(Nx))-A-np.diag(U_eff))
+                    GG = spsolve(G_inv, BB)
+                    Ne_sub[i_val, :, i_sub]=Ne_sub[i_val, :, i_sub]-2*Ne_2d*delta_E*abs(GG)**2*(np.imag(E_self[k,:]).transpose()*fermi(((mu_scatter_new-ee)/(k_B*Temp/q)),fermi_flag,-1.0/2.0))
+
+                    GGG = np.zeros((Nx,Nx))
+                    GGG[:, 0] = GG[:, Nx-2]
+                    GGG[:, Nx-1] = GG[:, Nx-1]
+                    GGG[0:Nx, 1:Nx-1] = GG[0:Nx,0:Nx-2]
+                    N_dos[:,k] = -2*np.imag(np.diag(GGG))
+
+
+                for i_node in np.arange(0,Nx):
+                    N_body[:, i_node] = Ne_sub[i_val, i_node, i_sub]*W_sub[i_sub, i_val, :,i_node]/dy
+
+                N_body_sum = N_body_sum+N_body
+
+        Info_scatter_new[:, 0] = Iin
+        Info_scatter_new[0, 0] = Is
+        Info_scatter_new[:, 2] = mu_scatter_new[0:nu_scatter]
+
+        if ox_pnt_flag==0:
+            #Ne_new=[Ne_old(1:(Nx*(t_topa+1)));...
+            #reshape((N_body_sum(2:Np_v-1,:))',...
+            #Nx*(Np_v-2),1);...
+            #Ne_old((Ntotal-Nx*(t_bota+1)+1):Ntotal)]
+            Ne_new[0:Nx*(t_topa+1)] = Ne_old[0:Nx*(t_topa+1)]
+            Ne_new[Nx*(t_topa+1):Nx*(t_topa+t_sia)] = np.reshape((N_body_sum[1:Np_v-1,:]),(1,Nx*(Np_v-2))).transpose()
+            Ne_new[Nx*(t_topa+t_sia):Ntotal] = Ne_old[(Ntotal-Nx*(t_bota+1)):Ntotal]
+            Ne_new = np.reshape(Ne_new, (Ntotal, 1))
+        elif ox_pnt_flag==1:
+            Ne_new=np.reshape(N_body_sum.transpose(), (1, Ntotal)).transpose()
+
+        globvars.E = E
+        globvars.Info_scatter_new = Info_scatter_new
+        globvars.Info_scatter_old = Info_scatter_old
+        globvars.Is = Is
+        globvars.Id = Id
+        globvars.N_dos = N_dos
+
 
     ################################################################################
     ######################START OF VARIABLE CHANGE PART#############################

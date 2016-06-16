@@ -5,7 +5,7 @@
 import time
 import sys
 import numpy as np
-from parser import parser
+from parse import parse
 
 """# DEVICE DIRECTIVE
 Nsd = 2e20; Nbody = 0; Lg_top = 9; Lg_bot = 9; Lsd = 10
@@ -92,7 +92,7 @@ while p.err != -1:
     p.nvar = 0
     p.var = []
     #p.reset()
-    parser(fin, p)
+    parse(fin, p)
 
     if p.err == 1 or p.err == 999:
         if p.ncard == 'device':

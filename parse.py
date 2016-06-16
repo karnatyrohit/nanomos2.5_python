@@ -1,8 +1,7 @@
 
 import numpy as np
-import fileinput
 
-def parser(fin, p):
+def parse(fin, p):
     #
     # function [p] = parser(fin)
     #

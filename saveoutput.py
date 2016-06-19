@@ -230,6 +230,17 @@ def saveoutput(Ec,Ne,Ie,Ne_sub,E_sub,Te_sub,converge,Vd_temp):
             ylabel('Energy (eV)')
             savefig('DOS.png')
             #print -depsc2 DOS.ps
+        #	PLOT the Density of states versus energy along the device
+        #------------------------------------------------------------------
+        if transport_model==5:
+            figure(12)
+            pcolor(XI,E,np.sqrt(abs(N_dos[:,0:len(E)]).transpose()))
+            #shading interp;
+	        # Square root of the DOS to get better visualization
+            xlabel('Distance along the device (nm)')
+            ylabel('Energy (eV)')
+            savefig('DOS.jpg')
+
     ################################################################################################
     if plot_Ne_IV==1:
     # SUBBAND CHARGE DENSITY (/cm^2) vs X for Diff. Vg

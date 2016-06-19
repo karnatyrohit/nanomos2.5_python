@@ -14,6 +14,7 @@ from func_energy import func_energy
 from globvars import globvars
 from scipy.sparse.linalg import spsolve
 from current_mat import current_mat
+import cmath
 
 
 def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junction_l, junction_r, div_avd):
@@ -300,18 +301,17 @@ def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junct
         i_scatter[nu_scatter] = 0
         i_scatter[nu_scatter+1] = Nx-1
         BB = sparse.lil_matrix((int(Nx), int(nu_scatter+2)), dtype=float)
+        i_scatter = i_scatter.astype(int)
+        i_scatter = np.squeeze(i_scatter)
+        #mu_scatter_old = mu_scatter_old.astype(int)
+        mu_scatter_old = np.squeeze(mu_scatter_old)
 
-        for ind in np.arange(0, nu_scatter):
-            for ind2 in np.arange(0, Nx):
-                if BB_dummy[ind2,int(i_scatter[ind])]:
-                    BB[ind2, ind] = BB_dummy[ind2, int(i_scatter[ind])]
-                if BB_dummy[ind2, 0]:
-                    BB[ind2, nu_scatter] = BB_dummy[ind2, 0]
-                if BB_dummy[ind2, Nx-1]:
-                    BB[ind2, nu_scatter + 1] = BB_dummy[ind2, Nx-1]
-
-
-        # BB[:, 0:nu_scatter] = BB_dummy[:,i_scatter[0]: i_scatter[nu_scatter]]
+        BB[:, 0:int(nu_scatter)] = BB_dummy[:,i_scatter[0:nu_scatter]]
+        BB[:, int(nu_scatter):int(nu_scatter)+1] = BB_dummy[:, 0:1]
+        for ind in np.arange(0,Nx):
+            if BB_dummy[ind, Nx-1]:
+                BB[ind, int(nu_scatter) + 1] = BB_dummy[ind, Nx-1]
+        BB = BB.tocsr()
 
         Ec_peak = np.max((-Vs, np.max(U_sub[0, :, 0])))
         Ec_bottom = U_sub[0, Nx-1, 0]
@@ -325,6 +325,7 @@ def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junct
         # comment the next line and uncomment the previous line for constant mobility
 
         E_self = np.ones((E_number,nu_scatter+2)) #correction on March 14th to include mobility
+        E_self = E_self + 0j
         U_tem = np.zeros((nu_scatter,1))
 
         # end of initialization
@@ -339,73 +340,119 @@ def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junct
         for i_val in np.arange(0, t_vall):
             for i_sub in np.arange(0, max_subband):
                 for i_s in np.arange(0, nu_scatter):
-                    factor = np.exp((Info_scatter_new[i_s,2]-U_sub[i_val, int(i_scatter[i_s]), i_sub])/(k_B*Temp/q))
+                    factor = np.exp((Info_scatter_new[i_s,2]-U_sub[i_val, i_scatter[i_s], i_sub])/(k_B*Temp/q))
                     sum1[i_s] = sum1[i_s]+my[i_val]*m_e*np.log(1+factor)
                         # Prevent divide by zero
                     factor1 = np.log(1+factor)
                     if(factor1<=1e-20):
                         factor1 = factor
-                    factor2 = factor/(factor1*(1+factor))*fermi(((Info_scatter_new[i_s,2]-U_sub[i_val, int(i_scatter[i_s]),i_sub])/(k_B*Temp/q)),fermi_flag,1.0/2.0)
+                    factor2 = factor/(factor1*(1+factor))*fermi(((Info_scatter_new[i_s,2]-U_sub[i_val, i_scatter[i_s],i_sub])/(k_B*Temp/q)),fermi_flag,1.0/2.0)
                     sum2[i_s] = sum2[i_s]+my[i_val]*m_e*np.sqrt(2*k_B*Temp/(np.pi*mx[i_val]*m_e))*factor2
 
         for i_s in np.arange(0, nu_scatter):
             lambda1[i_s]=2*k_B*Temp/q*Info_scatter_old[i_s,3]*sum1[i_s]/sum2[i_s]
 
+        lambda1 = np.squeeze(lambda1)
+
+        ttot=0
+        scattot=0
+        ktot =0
+        stot = 0
+        k2tot =0
+        soltot = 0
+        asstot = 0
+        N_dos = np.zeros((Nx, E_number))
+
         for i_val in np.arange(0,t_vall):
+            t1 = time.time()
             Ie_2d = 2*q**2/(np.pi**2*h_bar**2)*np.sqrt(my[i_val]*m_e*(k_B*Temp/q)*q*np.pi/2.0)
             tt = (h_bar**2)/(2*mx[i_val]*m_e*(dx**2)*q)
             tt = float(tt)
             A = tt*((2*np.eye(Nx))-(np.diag(np.ones(Nx-1),1))-(np.diag(np.ones(Nx-1),-1)))
-
+            t2 = time.time()
+            ttot += (t2 - t1)
             for i_sub in np.arange(0, max_subband):
-                U_bias=U_sub[i_val, :, i_sub]
-                U_tem=U_bias[(i_scatter[0:nu_scatter]).astype(int)]
-
+                s1 = time.time()
+                U_bias = U_sub[i_val, :, i_sub]
+                U_tem = U_bias[i_scatter[0:nu_scatter]]
+                s2 = time.time()
+                stot += (s2-s1)
                 for k in np.arange(0, E_number):
-                    ee=E[k]
-                    ep=ee+eta
-                    ck=1-((ep-U_bias[0])/(2*tt))
-                    con_s=-tt*np.exp(1j*np.arccos(ck))
-                    ck=1-((ep-U_bias[Nx-1])/(2*tt))
-                    con_d=-tt*np.exp(1j*np.arccos(ck))
-
+                    k1=time.time()
+                    ee = E[k]
+                    ep = ee+eta
+                    ck = 1-((ep-U_bias[0])/(2*tt))
+                    con_s = -tt*np.exp(1j*np.arccos(ck))
+                    ck = 1-((ep-U_bias[Nx-1])/(2*tt))
+                    con_d = -tt*np.exp(1j*np.arccos(ck))
+                    k2 = time.time()
+                    ktot += (k2 -k1)
                 # ADDED BY RAMESH JAN 13 03.
+                    scat1 = time.time()
                     for i_s in np.arange(0, nu_scatter):
-                        elutot = ee-(A[int(i_scatter[i_s]), int(i_scatter[i_s])]+U_bias[int(i_scatter[i_s])])
-                        g1 = (elutot+np.sqrt(elutot**2-4.0*tt**2))/(2*tt**2)
-                        g2 = (elutot-np.sqrt(elutot**2-4.0*tt**2))/(2*tt**2)
+                        elutot = ee-(A[i_scatter[i_s], i_scatter[i_s]]+U_bias[i_scatter[i_s]])
+                        g1 = (elutot+cmath.sqrt(elutot**2-4.0*tt**2))/(2*tt**2)
+                        g2 = (elutot-cmath.sqrt(elutot**2-4.0*tt**2))/(2*tt**2)
                         g3 = (np.imag(g2)<=0)*g2+(np.imag(g1<=0))*g1
-                        E_self[k,i_s] = i*np.imag(g3*2*dx*tt**2/lambda1[i_s])
+                        E_self[k,i_s] = 1j*np.imag(g3*2*dx*tt**2/lambda1[i_s])
 
-                    E_self = E_self + 0j
+                    scat2 = time.time()
+                    scattot += (scat2-scat1)
+                    k3 = time.time()
                     E_self[k, nu_scatter] = con_s
                     E_self[k, nu_scatter+1] = con_d
-                    print np.shape(E_self[k, :])
-                    print np.shape(U_scatter)
-                    U_scatter[(i_scatter).astype(int)] = (E_self[k,:]).transpose()
+                    U_scatter = U_scatter + 0j
+                    U_scatter = np.squeeze(U_scatter)
+                    U_scatter[i_scatter] = (E_self[k, :])
 
                     U_eff = U_bias+U_scatter
+                    #print U_eff
                     G_inv = sparse.csr_matrix((ep*np.eye(Nx))-A-np.diag(U_eff))
-                    GG = spsolve(G_inv,BB)
-                    T_E[:, k, :] = 4*Ie_2d*delta_E*sparse.spdiags(np.imag(E_self[k,:]).transpose(), 0, nu_scatter+2, nu_scatter+2)*abs(GG[(i_scatter).astype(int),:])**2*sparse.spdiags(np.imag(E_self[k,:]).transpose(), 0, nu_scatter+2, nu_scatter+2)+np.squeeze(T_E[:, k, :])
+                    GG = np.zeros((Nx, nu_scatter+2))
+                    GG = GG + 0j
+                    k4 = time.time()
+                    k2tot += (k4-k3)
+                    sol1 = time.time()
+                    gin = np.linalg.inv(G_inv.todense())
+                    gin = sparse.csr_matrix(gin)
+                    GG = gin*BB
+                    GG = GG.toarray()
+                    sol2 = time.time()
+                    soltot += (sol2-sol1)
+                    #print sparse.csr_matrix(np.diag(np.imag(E_self[k,:]).conj().T))
+                    #print np.shape(GG[i_scatter,:])
+                    #print delta_E
+                    #print abs(GG[i_scatter,:])**2
+                    #print sparse.csr_matrix(4*int(Ie_2d)*delta_E*np.dot(np.diag(np.imag(E_self[k,:]).conj().T),abs(GG[i_scatter,:])**2))
+                    T_E[:,k,:] = 4*int(Ie_2d)*delta_E*np.dot((np.dot(np.diag(np.imag(E_self[k,:]).conj().T),abs(GG[i_scatter,:])**2)),np.diag(np.imag(E_self[k,:]).conj().T))+np.squeeze(T_E[:, k, :])
+                    #print sparse.csr_matrix(T_E[:,k,:])
+                    #print E_self[k,:]
+                    #print GG[i_scatter,:]
+                    #print k
+                    sol3 = time.time()
+                    asstot += (sol3-sol2)
+        print ttot, stot, ktot, scattot, k2tot, soltot, asstot
 
         #calculate current, and search for mu_scatter
         #based on current continuity
 
         [Is, Id, Iin, mu_scatter_new] = current_mat(mu_scatter_old, T_E, E)
+        print 'sad'
+        print Is
+        print Id
 
         #end of mu_scatter search
 
         #Calculate charge density
         for i_val in np.arange(0, t_vall):
             Ne_2d = 2.0*np.sqrt(my[i_val]*m_e*(k_B*Temp/q)*q/(2.0*np.pi**3))/(h_bar*dx)
-            tt = (h_bar**2)/(2.0*mx(i_val)*m_e*(dx**2)*q)
+            tt = (h_bar**2)/(2.0*mx[i_val]*m_e*(dx**2)*q)
             tt = float(tt)
             A = tt*((2.0*np.eye(Nx))-(np.diag(np.ones(Nx-1),1))-(np.diag(np.ones(Nx-1),-1)))
 
             for i_sub in np.arange(0,max_subband):
                 U_bias = U_sub[i_val, :, i_sub]
-                U_tem = U_bias[(i_scatter[0, nu_scatter]).astype(int)]
+                U_tem = U_bias[(i_scatter[0:nu_scatter])]
 
                 for k in np.arange(0, E_number):
 
@@ -413,30 +460,34 @@ def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junct
                     #--------------------------------------------------
                     ee=E[k]
                     ep=ee+eta
-                    ck=1-((ep-U_bias(1))/(2*tt))
+                    ck=1-((ep-U_bias[0])/(2*tt))
                     con_s=-tt*np.exp(1j*np.arccos(ck))
-                    ck=1-((ep-U_bias(Nx))/(2*tt))
+                    ck=1-((ep-U_bias[Nx-1])/(2*tt))
                     con_d=-tt*np.exp(1j*np.arccos(ck))
 
                  # ADDED BY RAMESH JAN 13 03.
                     for i_s in np.arange(0, nu_scatter):
-                        elutot = ee-(A[int(i_scatter[i_s]),int(i_scatter[i_s])]+U_bias[int(i_scatter[i_s])])
-                        g1 = (elutot+np.sqrt(elutot**2-4*tt**2))/(2*tt**2)
-                        g2 = (elutot-np.sqrt(elutot**2-4*tt**2))/(2*tt**2)
+                        elutot = ee-(A[i_scatter[i_s], i_scatter[i_s]]+U_bias[i_scatter[i_s]])
+                        g1 = (elutot+cmath.sqrt(elutot**2-4*tt**2))/(2*tt**2)
+                        g2 = (elutot-cmath.sqrt(elutot**2-4*tt**2))/(2*tt**2)
                         g3 = (np.imag(g2)<=0)*g2+(np.imag(g1<=0))*g1
-                        E_self[k,i_s] = i*np.imag(g3*2*dx*tt**2/lambda1[i_s])
+                        E_self[k,i_s] = 1j*np.imag(g3*2*dx*tt**2/lambda1[i_s])
 
                     E_self = E_self + 0j
                     E_self[k, nu_scatter] = con_s
                     E_self[k, nu_scatter+1] = con_d
-                    U_scatter[(i_scatter).astype(int)] = (E_self[k,:]).transpose()
+                    U_scatter[i_scatter] = (E_self[k,:]).transpose()
 
                     U_eff = U_bias+U_scatter
                     G_inv = sparse.csr_matrix((ep*np.eye(Nx))-A-np.diag(U_eff))
-                    GG = spsolve(G_inv, BB)
-                    Ne_sub[i_val, :, i_sub]=Ne_sub[i_val, :, i_sub]-2*Ne_2d*delta_E*abs(GG)**2*(np.imag(E_self[k,:]).transpose()*fermi(((mu_scatter_new-ee)/(k_B*Temp/q)),fermi_flag,-1.0/2.0))
+                    gin = np.linalg.inv(G_inv.todense())
+                    gin = sparse.csr_matrix(gin)
+                    GG = gin*BB
+                    GG = GG.toarray()
+                    Ne_sub[i_val, :, i_sub]=Ne_sub[i_val, :, i_sub]-np.dot(2*Ne_2d*delta_E*abs(GG)**2,(np.imag(E_self[k,:]).conj().T)*fermi(((mu_scatter_new-ee)/(k_B*Temp/q)),fermi_flag,-1.0/2.0))
 
                     GGG = np.zeros((Nx,Nx))
+                    GGG = GGG +0j
                     GGG[:, 0] = GG[:, Nx-2]
                     GGG[:, Nx-1] = GG[:, Nx-1]
                     GGG[0:Nx, 1:Nx-1] = GG[0:Nx,0:Nx-2]
@@ -448,7 +499,7 @@ def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junct
 
                 N_body_sum = N_body_sum+N_body
 
-        Info_scatter_new[:, 0] = Iin
+        Info_scatter_new[:, 0] = np.squeeze(Iin)
         Info_scatter_new[0, 0] = Is
         Info_scatter_new[:, 2] = mu_scatter_new[0:nu_scatter]
 

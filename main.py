@@ -138,15 +138,15 @@ def main():
 
     Fn_new = np.zeros((Ntotal, 1))
 
-    Ne_sub = np.zeros((Nx, max_subband, t_vall))
-    E_sub = np.zeros((Nx, max_subband, t_vall))
-    Ne_sub_old = np.zeros((Nx, max_subband, t_vall))
-    E_sub_old = np.zeros((Nx, max_subband, t_vall))
+    Ne_sub = np.zeros((t_vall, Nx, max_subband))
+    E_sub = np.zeros((t_vall, Nx, max_subband))
+    Ne_sub_old = np.zeros((t_vall, Nx, max_subband))
+    E_sub_old = np.zeros((t_vall, Nx, max_subband))
 
     Ie_tem = np.zeros((Nx, 1))
-    Ie_sub = np.zeros((Nx, max_subband, t_vall))
-    Mu_sub = np.zeros((Nx, max_subband, t_vall))
-    Te_sub = np.zeros((Nx, max_subband, t_vall))
+    Ie_sub = np.zeros((t_vall, Nx, max_subband))
+    Mu_sub = np.zeros((t_vall, Nx, max_subband))
+    Te_sub = np.zeros((t_vall, Nx, max_subband))
 
     ############################START OF SPECIFYING Nd############################
     doping(Nx, Ny, Ntotal, junction_l, junction_r,Nd , N_sd, N_body)
@@ -281,6 +281,7 @@ def main():
     SpFnin = spFn
     Fnin = Fn_new
     Ecin = Ec_new
+    print 'here'
 
     ############################END OF INITIAL GUESS OF Ec##############################
 
@@ -346,6 +347,8 @@ def main():
                     print ver
                     break
 
+            print transport_model
+            print 'lalal'
             if transport_model == 5:
                 Ie_tem = Is
                 #print 'current Is has to be established- coding left'

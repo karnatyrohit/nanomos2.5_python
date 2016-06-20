@@ -8,13 +8,16 @@ from fermi import fermi
 from globvars import globvars
 from scipy import  sparse
 from scipy.sparse.linalg import spsolve
+from anti_dummy import anti_dummy
 
-def current(Ne, Ec, NE_sub, E_sub, Nx, Ny, Ntotal, mx, my ,mz ):
+def current(Ne, Ec, Ne_sub, E_sub, Nx, Ny, Ntotal, mx, my ,mz ):
     Temp = Te
     transport_model = transportmodel.value
     Vd = Vdc.value
     fermi_flag = fermiflag1.value
     E = globvars.E
+    nu_scatter = globvars.nu_scatter
+    Info_scatter_old = globvars.Info_scatter_old
 
     #### MODEL 2 related parameters
 
@@ -103,6 +106,50 @@ def current(Ne, Ec, NE_sub, E_sub, Nx, Ny, Ntotal, mx, my ,mz ):
     if transport_model==1:  #TRANSPORT MODEL 1######################################
         print 'entered tm1'
     ##############################################################################
+
+    #*****************************************************************************
+    elif transport_model==2: #TRANSPORT MODEL 2 DD*******************************
+    #*****************************************************************************
+        U_bias = np.zeros((Nx,1))
+        Ns = np.zeros((Nx,1))
+        Ie_tem = np.zeros((Nx,1))
+        mobility = np.zeros((nu_scatter-1,1))
+        mobility = (np.diff(Info_scatter_old[:,3])+2*Info_scatter_old[0:Nx-1,3])/2.0
+
+        for i_val in np.arange(0, t_vall):
+            Nccc = 2*m_e*np.sqrt(mx[i_val]*my[i_val])*k_B*Temp/(np.pi*h_bar**2)
+
+            for i_sub in np.arange(max_subband):
+                U_bias = E_sub[i_val, :, i_sub]
+                Ns = Ne_sub[i_val, :, i_sub]
+
+                if fermi_flag == 0:
+                    fac_deg= np.ones(Nx-1)
+                elif fermi_flag == 1:
+                    Fn_channel = U_bias+(k_B*Temp/q)*anti_dummy(Ns/Nccc,0,fermi_flag)
+                    zeta_channel = (Fn_channel-U_bias)/(k_B*Temp/q)
+                    fac_deg_tem = np.log(1+np.exp(zeta_channel))*(1+np.exp(-zeta_channel))
+                    fac_deg=(np.diff(fac_deg_tem)+2*fac_deg_tem[0:Nx-1])/2
+                V_channel = -U_bias
+                E_channel = -np.diff(V_channel)/dx
+                mu_channel = mobility/(1+(mobility/Vel_sat*abs(E_channel))**beta)**(1/beta)
+
+                Coe_1 = np.zeros(Nx-1)
+                Coe_2 = np.zeros(Nx-1)
+
+                for j in np.arange(0,Nx-1):
+                    if abs(E_channel[j])<=abs(e_field_limit*fac_deg[j]):
+                        Coe_1[j] = -mu_channel[j]*(k_B*Temp/q)*fac_deg[j]/dx
+                        Coe_2[j] = -Coe_1[j]
+                    else:
+                        Coe_1[j] = mu_channel[j]*E_channel[j]*1/(1-np.exp(E_channel[j]*dx/((k_B*Temp/q)*fac_deg[j])))
+                        Coe_2[j] = mu_channel[j]*E_channel[j]*1/(1-np.exp(-E_channel[j]*dx/((k_B*Temp/q)*fac_deg[j])))
+                    Ie_tem[j]=-q*(Ns[j]*Coe_1[j]+Ns[j+1]*Coe_2[j])
+
+                Ie_tem[Nx-1] = Ie_tem[Nx-2]
+                Ie_sub[i_val, :,i_sub] = np.squeeze(Ie_tem)
+                Fn_sub[i_val, :,i_sub] = Fn_channel
+                Ie = Ie+Ie_tem
 
     ###########################################################################
     elif transport_model==3:  #BALLISTIC TRANSPORT USING SEMICLASSICAL APPROACH

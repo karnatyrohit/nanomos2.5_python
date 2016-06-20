@@ -82,8 +82,8 @@ def current_mat(mu_scatter_old, T_E, E):
     #*********************************Newton searching loop*********************************
 
     iiii = 0
-    print Isc
-    print I_criterion
+    #print Isc
+    #print I_criterion
     while(Isc>=I_criterion):
         print 'Entering Jacobian loop in Current_mat'
         delta_mu[0:nu_scatter] = -spsolve(sparse.csr_matrix(IMU),sparse.csr_matrix(Iin))

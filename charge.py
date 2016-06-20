@@ -154,6 +154,88 @@ def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junct
                 Ne_new[i_node] = (np.sin((iii_row+1-(Nx*(t_topa+1))/Nx) * dy/t_si*np.pi)**2) * Ns[iii_col]*2.0/t_si
 
 
+    #############################################################################
+    elif transport_model==2: # DRIFT DIFFUSION ********************************
+    #############################################################################
+        mobility = np.zeros((nu_scatter-1,1))
+        mobility = (np.diff(Info_scatter_old[:, 3]) + 2.0*Info_scatter_old[0:Nx-1,3])/2.0
+
+        [U_sub, W_sub]=schred(Ec_old, Nx, Ny, Ntotal, mx, my, mz)
+
+        E_sub=U_sub
+
+        for i_val in np.arange(0, t_vall):
+            Nccc = 2*m_e*np.sqrt(mx[i_val]*my[i_val])*k_B*Temp/(np.pi*h_bar**2)
+            for i_sub in np.arange(0, max_subband):
+                U_bias = U_sub[i_val, :,i_sub]
+                Ns = Ne_sub_old[i_val, :,i_sub]
+                if fermi_flag == 1:
+                    Ns_con = Nccc*np.log(1+np.exp((-Vs-U_bias[0])/(k_B*Temp/q)))
+                    Nd_con = Nccc*np.log(1+np.exp((-Vd-U_bias[Nx-1])/(k_B*Temp/q)))
+                elif fermi_flag == 0:
+                    Ns_con = Nccc*np.exp((-Vs-U_bias[0])/(k_B*Temp/q))
+                    Nd_con = Nccc*np.exp((-Vd-U_bias[Nx-1])/(k_B*Temp/q))
+
+                if fermi_flag == 0:
+                    fac_deg = np.ones(Nx-1,1)
+                elif fermi_flag == 1:
+                    arg = anti_dummy(Ns/Nccc,0,fermi_flag)
+                    Fn = U_bias+(k_B*Temp/q)*arg
+                    zeta_channel = (Fn-U_bias)/(k_B*Temp/q)
+                    fac_deg_tem = np.log(1+np.exp(zeta_channel))*(1+np.exp(-zeta_channel))
+                    fac_deg_tem[np.where(arg < -5)]=1 # To ensure could scalability when subbands are empty
+                    fac_deg=(np.diff(fac_deg_tem)+2*fac_deg_tem[0:Nx-1])/2
+                V_channel=-U_bias
+                E_channel=-np.diff(V_channel)/dx
+
+                #If you want constant mobility uncomment the following line
+                #mu_channel=mu_low./(1+(mu_low/Vel_sat*abs(E_channel)).^beta).^(1/beta)
+
+                #If you want doping dependent mobility uncomment the following line
+                mu_channel=mobility/(1+(mobility/Vel_sat*abs(E_channel))**beta)**(1/beta)
+                Coe_1 = np.zeros(Nx-1)
+                Coe_2 = np.zeros(Nx-1)
+
+                for j in np.arange(0,Nx-1):
+                    if abs(E_channel[j]) <= abs(e_field_limit*fac_deg[j]):
+                        Coe_1[j] = -mu_channel[j]*(k_B*Temp/q)*fac_deg[j]/dx
+                        Coe_2[j] = -Coe_1[j]
+                    else:
+                        Coe_1[j] = mu_channel[j]*E_channel[j]*1/(1-np.exp(E_channel[j]*dx/((k_B*Temp/q)*fac_deg[j])))
+                        Coe_2[j] = mu_channel[j]*E_channel[j]*1/(1-np.exp(-E_channel[j]*dx/((k_B*Temp/q)*fac_deg[j])))
+
+                AAA = np.diag(-Coe_1[1:Nx-1]+Coe_2[0:Nx-2])-np.diag(Coe_2[1:Nx-2],1)+np.diag(Coe_1[1:Nx-2],-1)
+                CCC = np.zeros((Nx-2,1))
+                CCC[0] = -Coe_1[0]*Ns_con/Ncc
+                CCC[Nx-3] = Coe_2[Nx-2]*Nd_con/Ncc
+
+                BBB = spsolve(sparse.csr_matrix(AAA),sparse.csr_matrix(CCC))
+                #Ne_sub[i_val, :, i_sub] = np.reshape([Ns_con,BBB*Ncc,Nd_con],(Nx,1))
+                Ne_sub[i_val, 0, i_sub] = Ns_con
+                Ne_sub[i_val, 1:Nx-1, i_sub] = BBB*Ncc
+                Ne_sub[i_val, Nx-1, i_sub] = Nd_con
+
+                for i_node in np.arange(0,Nx):
+                    N_body[:,i_node] = Ne_sub[i_val, i_node, i_sub]*W_sub[i_sub, i_val, :, i_node]/dy
+
+                N_body_sum = N_body_sum+N_body
+
+
+        Info_scatter_new[:,2] = Fn
+
+        if ox_pnt_flag == 0:
+            #Ne_new = [Ne_old(1:(Nx*(t_topa+1)));...
+            #reshape((N_body_sum(2:Np_v-1,:))',...
+            #Nx*(Np_v-2),1);...
+            #Ne_old((Ntotal-Nx*(t_bota+1)+1):Ntotal)]
+            Ne_new[0:Nx*(t_topa+1)] = Ne_old[0:Nx*(t_topa+1)]
+            Ne_new[Nx*(t_topa+1):Nx*(t_topa+t_sia)] = np.reshape((N_body_sum[1:Np_v-1,:]),(1,Nx*(Np_v-2))).transpose()
+            Ne_new[Nx*(t_topa+t_sia):Ntotal] = Ne_old[(Ntotal-Nx*(t_bota+1)):Ntotal]
+            Ne_new = np.reshape(Ne_new, (Ntotal, 1))
+        elif ox_pnt_flag == 1:
+            Ne_new = np.reshape(N_body_sum.transpose(),(1, Ntotal)).transpose()
+
+
    ################################################################################
     elif transport_model == 3: #BALLISTIC TRANSPORT USING SEMICLASSICAL APPROACH#####
     ################################################################################
@@ -431,15 +513,15 @@ def charge(Ne_old,Ec_old,Ne_sub_old,E_sub_old, Nx, Ny, Ntotal, mx, my, mz, junct
                     #print k
                     sol3 = time.time()
                     asstot += (sol3-sol2)
-        print ttot, stot, ktot, scattot, k2tot, soltot, asstot
+        #print ttot, stot, ktot, scattot, k2tot, soltot, asstot
 
         #calculate current, and search for mu_scatter
         #based on current continuity
 
         [Is, Id, Iin, mu_scatter_new] = current_mat(mu_scatter_old, T_E, E)
-        print 'sad'
-        print Is
-        print Id
+        #print 'sad'
+        #print Is
+        #print Id
 
         #end of mu_scatter search
 

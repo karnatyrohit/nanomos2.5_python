@@ -281,7 +281,6 @@ def main():
     SpFnin = spFn
     Fnin = Fn_new
     Ecin = Ec_new
-    print 'here'
 
     ############################END OF INITIAL GUESS OF Ec##############################
 
@@ -347,8 +346,6 @@ def main():
                     print ver
                     break
 
-            print transport_model
-            print 'lalal'
             if transport_model == 5:
                 Ie_tem = Is
                 #print 'current Is has to be established- coding left'

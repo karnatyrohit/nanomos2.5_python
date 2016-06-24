@@ -175,9 +175,9 @@ def current_mat(mu_scatter_old, T_E, E):
         I_tem[i_node]=I_dummy1-I_dummy2
 
     Is=I_tem[0]
-    #print Is
+    print Is
     Id=I_tem[1]
-    #print Id
+    print Id
 
 
 

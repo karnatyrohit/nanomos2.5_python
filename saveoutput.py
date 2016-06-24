@@ -102,9 +102,9 @@ def saveoutput(Ec,Ne,Ie,Ne_sub,E_sub,Te_sub,converge,Vd_temp):
             for i in np.arange(1,Ng):
                 plot(Vd_bias, Ie[i, :], 'o-')
 
-            xlabel('V_{DS} [V]')
-            ylabel('I_{DS} [\muA/\mum]')
-            title('I_{DS} vs. V_{DS}')
+            xlabel('$V_{DS}$ [V]')
+            ylabel('$I_{DS}$ $[\mu A/\mu m]$')
+            title('$I_{DS}$ vs. $V_{DS}$')
             savefig('ID_VD.png')
 
             temmm = Vd_bias
@@ -125,13 +125,24 @@ def saveoutput(Ec,Ne,Ie,Ne_sub,E_sub,Te_sub,converge,Vd_temp):
         figure(1)
         semilogy(Vg_bias, Ie[:,0],'o-')
         grid(True)
-        xlabel('V_{GS} [V]')
-        ylabel('I_{DS} [\muA/\mum]')
-        title('I_{DS} vs. V_{GS}')
+        xlabel('$V_{GS}$ [V]')
+        ylabel('$I_{DS} [\mu A/\mu m]$')
+        title('$I_{DS}$ vs. $V_{GS}$')
         savefig('ID_VG.png')
 
-        temmm=[Vg_bias, Ie[:,0]]
-        np.savetxt( 'ID_VG.dat', temmm, fmt='%e', delimiter=';')
+        #temmm=[Vg_bias, Ie[:,0]]
+        #np.savetxt( 'ID_VG.dat', temmm, fmt='%e', delimiter=';')
+        temmm = Vg_bias
+        Ie2 = Ie.transpose()
+        fid = open('ID_VG.dat','w')
+        ind = 0
+        for item1 in temmm:
+            fid.write("%e " % item1)
+            for item2 in Ie2[:,ind]:
+                fid.write("%e " % item2)
+            fid.write('\n')
+            ind += 1
+        fid.close()
 
     # ID-VD CHARACTERISTICS (A/m), SAVED TO "id_vd.dat"
     # -------------------------------------------------
@@ -139,13 +150,24 @@ def saveoutput(Ec,Ne,Ie,Ne_sub,E_sub,Te_sub,converge,Vd_temp):
         figure(1)
         plot(Vd_bias, Ie[0,:], 'o-')
         grid(True)
-        xlabel('V_{DS} [V]')
-        ylabel('I_{DS} [\muA/\mum]')
-        title('I_{DS} vs. V_{DS}')
+        xlabel('$V_{DS}$ [V]')
+        ylabel('$I_{DS} [\mu A/\mu m]$')
+        title('$I_{DS}$ vs. $V_{DS}$')
         savefig('ID_VD.png')
 
-        temmm = [Vd_bias, Ie[0,:]]
-        np.savetxt('ID_VD.dat', temmm, fmt='%e', delimiter=';')
+        #temmm = [Vd_bias, Ie[0,:]]
+        #np.savetxt('ID_VD.dat', temmm, fmt='%e', delimiter=';')
+        temmm = Vd_bias
+        Ie2 = Ie.transpose()
+        fid = open('ID_{VD}.dat','w')
+        ind = 0
+        for item1 in temmm:
+            fid.write("%e " % item1)
+            for item2 in Ie2[ind,:]:
+                fid.write("%e " % item2)
+            fid.write('\n')
+            ind += 1
+        fid.close()
     #if plot_Iv==1 end
 
     #***************************************************************************************
@@ -219,6 +241,7 @@ def saveoutput(Ec,Ne,Ie,Ne_sub,E_sub,Te_sub,converge,Vd_temp):
             xlabel('Transmission Coefficient')
             ylabel('Energy (eV)')
             savefig('Trans.png')
+            colorbar()
         #	PLOT the Density of states versus energy along the device
         #------------------------------------------------------------------
         if transport_model==4:
@@ -228,6 +251,7 @@ def saveoutput(Ec,Ne,Ie,Ne_sub,E_sub,Te_sub,converge,Vd_temp):
             # Square root of the DOS to get better visualization
             xlabel('Distance along the device (nm)')
             ylabel('Energy (eV)')
+            colorbar()
             savefig('DOS.png')
             #print -depsc2 DOS.ps
         #	PLOT the Density of states versus energy along the device
@@ -239,6 +263,7 @@ def saveoutput(Ec,Ne,Ie,Ne_sub,E_sub,Te_sub,converge,Vd_temp):
 	        # Square root of the DOS to get better visualization
             xlabel('Distance along the device (nm)')
             ylabel('Energy (eV)')
+            colorbar()
             savefig('DOS.jpg')
 
     ################################################################################################
@@ -265,7 +290,7 @@ def saveoutput(Ec,Ne,Ie,Ne_sub,E_sub,Te_sub,converge,Vd_temp):
             elif Ng_step==0:
                 title('2D electron density along the channel')
             xlabel('X [nm]')
-            ylabel('N2D [cm^{-2}]')
+            ylabel('N2D $[cm^{-2}]$')
             savefig('N2D_X1.png')
 
     #figure(11)
@@ -287,6 +312,19 @@ def saveoutput(Ec,Ne,Ie,Ne_sub,E_sub,Te_sub,converge,Vd_temp):
     #print -depsc ./output/LOG_N2D_X.ps
 
             temmm=[XI,Ne2]
+            Ne2 = np.squeeze(Ne_sub[0,Ng_step,:,:,0])
+            Ne2 = Ne2*1e-4
+            fid = open('N2D_X1.dat','w')
+            ind = 0
+            print np.shape(XI)
+            print np.shape(Ne2)
+            for item1 in XI:
+                fid.write("%e " % item1)
+                item2 = Ne2[ind]
+                fid.write("%e " % item2)
+                fid.write('\n')
+                ind += 1
+            fid.close()
             #save N2D_X1.dat temmm -ascii;
 
 
@@ -307,10 +345,23 @@ def saveoutput(Ec,Ne,Ie,Ne_sub,E_sub,Te_sub,converge,Vd_temp):
                 grid(True)
             title('2D electron density along the channel at different Vd')
             xlabel('X [nm]')
-            ylabel('N2D [cm^{-2}]')
+            ylabel('N2D [$cm^{-2}$]')
             savefig('N2D_X2.png')
 
-        temmm=[XI,Ne2]
+            temmm=[XI,Ne2]
+            Ne2 = np.squeeze(Ne_sub[0,Ng_step,:,:,0])
+            Ne2 = Ne2*1e-4
+            fid = open('N2D_X2.dat','w')
+            ind = 0
+            print np.shape(XI)
+            print np.shape(Ne2)
+            for item1 in XI:
+                fid.write("%e " % item1)
+                for item2 in Ne2[:,ind]:
+                    fid.write("%e " % item2)
+                fid.write('\n')
+                ind += 1
+            fid.close()
         #save N2D_X2.dat temmm -ascii
 
     #******************************************************************************************
@@ -333,9 +384,19 @@ def saveoutput(Ec,Ne,Ie,Ne_sub,E_sub,Te_sub,converge,Vd_temp):
             ylabel('E_{SUB} [eV]')
             savefig('Ec_X1.png')
 
-            tem = E_sub[0, iii, Nd_step, :, 0]
+            tem = E_sub[0,iii, Nd_step, :, 0]
             sq_tem = np.squeeze(tem)
+            print np.shape(sq_tem)
             temmm = [XI, sq_tem]
+            fid = open('Ec_X1.dat','w')
+            ind = 0
+            for item1 in XI:
+                fid.write("%e " % item1)
+                item2 = sq_tem[ind]
+                fid.write("%e " % item2)
+                fid.write('\n')
+                ind += 1
+            fid.close()
             #save Ec_X1.dat temmm -ascii
 
     # The First SUBBAND ENERGY PROFILE vs X for Diff. Vd
@@ -350,12 +411,21 @@ def saveoutput(Ec,Ne,Ie,Ne_sub,E_sub,Te_sub,converge,Vd_temp):
 
             title('The First Subband energy profile along the channel at different Vd')
             xlabel('X [nm]')
-            ylabel('E_{SUB} [eV]')
+            ylabel('$E_{SUB}$ [eV]')
             savefig('Ec_X2.png')
 
             tem = E_sub[0, Ng_step, :, :, 0]
             sq_tem = np.squeeze(tem)
-            temmm = [XI,sq_tem]
+            fid = open('Ec_X2.dat','w')
+            ind = 0
+            for item1 in XI:
+                fid.write("%e " % item1)
+                for item2 in sq_tem[:,ind]:
+                    fid.write("%e " % item2)
+                fid.write('\n')
+                ind += 1
+            fid.close()
+            #temmm = [XI,sq_tem]
             #save Ec_X2.dat temmm -ascii
 
     # 3D CHARGE DENSITY N(X,Y)
@@ -372,7 +442,7 @@ def saveoutput(Ec,Ne,Ie,Ne_sub,E_sub,Te_sub,converge,Vd_temp):
         title('3D Electron density profile')
         ax.set_xlabel('X [nm]')
         ax.set_ylabel('Y [nm]')
-        ax.set_zlabel('Ne [m^{-3}]')
+        ax.set_zlabel('Ne [$m^{-3}$]')
         ax.view_init(elev=60, azim=50)
         ax.dist=8
         savefig('Ne_X_Y.png')

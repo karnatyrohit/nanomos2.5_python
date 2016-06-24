@@ -347,7 +347,9 @@ def main():
                     break
 
             if transport_model == 5:
-                Ie_tem = Is
+                Ie_tem = globvars.Is
+                print 'there'
+                print Ie_tem
                 #print 'current Is has to be established- coding left'
                 #Ie_tem = Is   # Rohit look into this global variable
             else:
